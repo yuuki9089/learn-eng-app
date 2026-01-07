@@ -1,0 +1,47 @@
+// import Image from "next/image";
+
+// export default function Home() {
+//   return <></>
+// }
+
+
+import { signIn, auth, signOut } from "@/auth";
+import Image from "next/image";
+
+export default async function Home() {
+  const session = await auth();
+
+  console.log(session);
+
+  return (
+    <>
+      {session !== null ? (
+        <>
+          <h1>{session.user?.name}がログインしたよ</h1>
+          <h1>ここはhome</h1>
+          <Image height={300} width={300} src={session.user?.image as string} alt="user image" />
+          <form
+            action={async () => {
+              "use server";
+              await signOut();
+            }}
+          >
+            <button type="submit">Signout</button>
+          </form>
+        </>
+      ) : (
+        <>
+          <h1>ログインしてね</h1>
+          <form
+            action={async () => {
+              "use server";
+              await signIn("google");
+            }}
+          >
+            <button type="submit">Signin with Google</button>
+          </form>
+        </>
+      )}
+    </>
+  );
+}
