@@ -13,9 +13,8 @@ export default async function Home() {
   const session = await auth();
 
   const texts = [
-    "Welcome",
-    "LearnEngApp",
-    "Have Fun!",
+    "Welcome to LearnEngApp",
+    "Have a fulfilling study!",
   ]
 
   console.log(session);
@@ -27,10 +26,10 @@ export default async function Home() {
       ) : (
         <>
           <div className="flex-col justify-center items-center place-content-center  min-h-screen py-2 space-y-4">
-            <div className="justify-center items-center" style={{ display: "block" }}>
+            <div className="justify-center items-center py-15" style={{ display: "block" }}>
               <MorphingText className="w-full text-center" texts={texts} />
             </div>
-            <div className="flex justify-center items-center">
+            <div className="flex justify-center items-center py-15">
               <form
                 action={async () => {
                   "use server";
