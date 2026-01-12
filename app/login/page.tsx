@@ -9,7 +9,7 @@ import { signIn, auth, signOut } from "@/auth";
 import Image from "next/image";
 import { MorphingText } from "@/components/ui/morphing-text";
 
-export default async function Home() {
+export default async function Login() {
   const session = await auth();
 
   const texts = [

@@ -13,7 +13,7 @@ import {
   TypingAnimation,
 } from "@/components/ui/terminal"
 
-export default async function Home() {
+export default async function Logout() {
   const session = await auth();
   // const router = useRouter();
 
