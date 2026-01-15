@@ -1,8 +1,10 @@
 import Container from '@mui/material/Container';
+import CheckBox from '@mui/material/Checkbox';
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { FormGroup } from '@mui/material';
 
 type MainPanelProps = {
     title: string;
@@ -32,9 +34,10 @@ export default function MainPanel(props: MainPanelProps) {
                             <div className="w-full flex items-center gap-3 flex justify-between">
 
                                 <p className="text-2xl font-semibold">This is a pen.</p>
-                                <div className="mt-auto pt-6 flex gap-3">
-                                    <Volume2 size={18} className="cursor-pointer" />
-                                    <Check className="text-green-500" />
+                                <div className="mt-auto pt-6 flex gap-3 items-center">
+                                    <Volume2 size={22} className="cursor-pointer" />
+                                    <CheckBox color='success'/>
+                                    {/* <Check className="text-green-500" /> */}
                                 </div>
                             </div>
 
