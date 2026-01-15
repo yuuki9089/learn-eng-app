@@ -1,3 +1,5 @@
+"use client"
+
 import Container from '@mui/material/Container';
 import CheckBox from '@mui/material/Checkbox';
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
@@ -5,12 +7,37 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormGroup } from '@mui/material';
+import { title } from 'process';
+import { PageMode } from '@/types/pageMode';
 
 type MainPanelProps = {
-    title: string;
+    title: PageMode;
 };
 
 export default function MainPanel(props: MainPanelProps) {
+
+    // ==========
+    // 表示する要素ごと二判定する関数群
+    // ==========
+
+    // 4択問題
+    function fourChoicesShow(pm: PageMode): Boolean {
+        switch (pm) {
+
+            // 英単語
+            case PageMode.WORDS:
+                return true;
+
+            // 英文フレーズ
+            case PageMode.PHRASES:
+                return false;
+
+            // 英短文
+            case PageMode.SHORT_TEXTS:
+                return false;
+        }
+    }
+
     return (
         <>
             {/* Main */}
@@ -20,7 +47,7 @@ export default function MainPanel(props: MainPanelProps) {
 
                     <div className="flex justify-between items-start px-5">
                         <div>
-                            <h2 className="text-3xl font-bold">タイトル</h2>
+                            <h2 className="text-3xl font-bold">{props.title}</h2>
                         </div>
                         <div className="text-right text-xl text-muted-foreground">
                             <div>No.100</div>
@@ -36,16 +63,31 @@ export default function MainPanel(props: MainPanelProps) {
                                 <p className="text-2xl font-semibold">This is a pen.</p>
                                 <div className="mt-auto pt-6 flex gap-3 items-center">
                                     <Volume2 size={22} className="cursor-pointer" />
-                                    <CheckBox color='success'/>
+                                    <CheckBox color='success' />
                                     {/* <Check className="text-green-500" /> */}
                                 </div>
                             </div>
 
+                            {/* 4択の表示 (英単語のみ)*/}
+                            {
+                                fourChoicesShow(props.title) ?
+                                    <div>
+                                        dummy
+                                    </div> :
+                                    <>
+                                    </>
+                            }
 
-                            <Input placeholder="ここに回答を入力" />
 
+                            {!fourChoicesShow(props.title) ?
+                                <>
+                                    <Input placeholder="ここに回答を入力" />
+                                    <Button className="mx-auto block">採点</Button>
+                                </>
+                                : 
+                                <>
+                                </>}
 
-                            <Button className="mx-auto block">採点</Button>
 
                             <div className='space-y-6 py-8'>
                                 {/* AI Result */}

@@ -1,6 +1,8 @@
 import Sidebar from "@/components/sidebar";
 import MainPanel from "@/components/mainpanel";
 import SubPanel from "@/components/subpanel";
+import { PageMode } from "@/types/pageMode";
+
 
 export default async function Words() {
 
@@ -10,7 +12,7 @@ export default async function Words() {
         <Sidebar />
         {/* <h1>ここは英単語</h1> */}
           <MainPanel
-            title={"英単語"}
+            title={PageMode.WORDS}
           />
           <SubPanel />
         </div>
