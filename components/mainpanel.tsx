@@ -3,7 +3,7 @@
 import Container from '@mui/material/Container';
 import CheckBox from '@mui/material/Checkbox';
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormGroup } from '@mui/material';
@@ -71,9 +71,39 @@ export default function MainPanel(props: MainPanelProps) {
                             {/* 4択の表示 (英単語のみ)*/}
                             {
                                 fourChoicesShow(props.title) ?
-                                    <div>
-                                        dummy
-                                    </div> :
+                                    <div className='w-full flex flex-col gap-5'>
+                                        <div className='flex flex-wrap px-5 justify-center gap-8'>
+                                            <Card className='w-2/5 bg-[#0f172a]'>
+                                                <CardContent>
+                                                    <CardTitle className='text-center'>
+                                                        <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                                    </CardTitle>
+                                                </CardContent>
+                                            </Card>
+                                            <Card className='w-2/5 bg-[#0f172a]'>
+                                                <CardContent>
+                                                    <CardTitle className='text-center'>
+                                                        <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                                    </CardTitle>
+                                                </CardContent>
+                                            </Card>
+                                            <Card className='w-2/5 bg-[#0f172a]'>
+                                                <CardContent>
+                                                    <CardTitle className='text-center'>
+                                                        <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                                    </CardTitle>
+                                                </CardContent>
+                                            </Card>
+                                            <Card className='w-2/5 bg-[#0f172a]'>
+                                                <CardContent>
+                                                    <CardTitle className='text-center'>
+                                                        <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                                    </CardTitle>
+                                                </CardContent>
+                                            </Card>
+                                        </div>
+                                    </div>
+                                    :
                                     <>
                                     </>
                             }
@@ -84,7 +114,7 @@ export default function MainPanel(props: MainPanelProps) {
                                     <Input placeholder="ここに回答を入力" />
                                     <Button className="mx-auto block">採点</Button>
                                 </>
-                                : 
+                                :
                                 <>
                                 </>}
 
@@ -96,12 +126,17 @@ export default function MainPanel(props: MainPanelProps) {
                                     <p className="text-sm mt-1">ここにアドバイスが入る</p>
                                 </div>
 
-
-                                {/* Model Answer */}
-                                <div className="border border-blue-300 bg-blue-50 rounded-xl p-4">
-                                    <p className="font-semibold text-blue-600">模範解答</p>
-                                    <p className="text-sm mt-1">ここに模範解答が入る</p>
-                                </div>
+                                {!fourChoicesShow(props.title) ?
+                                    <>
+                                        {/* Model Answer */}
+                                        < div className="border border-blue-300 bg-blue-50 rounded-xl p-4">
+                                            <p className="font-semibold text-blue-600">模範解答</p>
+                                            <p className="text-sm mt-1">ここに模範解答が入る</p>
+                                        </div>
+                                    </>
+                                    :
+                                    <>
+                                    </>}
                             </div>
                         </CardContent>
 
@@ -112,8 +147,8 @@ export default function MainPanel(props: MainPanelProps) {
                             </div>
                         </CardContent>
                     </div>
-                </Card>
-            </main>
+                </Card >
+            </main >
         </>
     );
 }
