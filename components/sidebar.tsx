@@ -29,7 +29,7 @@ export default function Sidebar() {
             <aside
                 className={`${open ? "translate-x-0" : "-translate-x-64"} md:translate-x-0 transition-transform w-64 bg-white shadow-xl p-6 flex flex-col gap-4 h-full fixed md:static z-40`}
             >
-                <h1 className="text-2xl font-bold mb-4">English App</h1>
+                <h1 className="text-2xl font-bold mb-4">LearnEngApp</h1>
                 <nav className="flex flex-col gap-3">
                     <NavLink href="/" active={pathname === "/home"}><Home size={20} /> ホーム</NavLink>
                     <NavLink href="/words" active={pathname === "/words"}><Book size={20} /> 英単語</NavLink>
