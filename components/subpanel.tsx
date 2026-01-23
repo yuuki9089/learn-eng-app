@@ -6,6 +6,8 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import { Box } from "@mui/material";
 import { useState } from "react";
+import TextField from "@mui/material/TextField"; // プルダウン
+import Autocomplete from "@mui/material/Autocomplete"; // プルダウンの自動補完
 
 
 export default function SubPanel() {
@@ -13,6 +15,11 @@ export default function SubPanel() {
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
         setSelectedTab(newValue);
     };
+    const options = [
+        { label: '正解', id: 1 },
+        { label: '不正解', id: 2 },
+        { label: 'お気に入り', id: 3 },
+    ]
     return (
         <>
             {/* Right panel */}
@@ -34,8 +41,13 @@ export default function SubPanel() {
                         <span className="text-muted-foreground">出題履歴</span>
                     </div> */}
                     </div>
-
-                    <Button variant="outline" className="w-full">不正解</Button>
+                    <div className="w-full">
+                        <Autocomplete
+                            disablePortal
+                            options={options}
+                            renderInput={(params) => <TextField {...params} label="履歴の絞り込み" />}
+                        />
+                    </div>
 
 
                     <HistoryItem no="No.100" text="example 1" ok />
