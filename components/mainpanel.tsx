@@ -17,7 +17,7 @@ type MainPanelProps = {
 export default function MainPanel(props: MainPanelProps) {
 
     // ==========
-    // 表示する要素ごと二判定する関数群
+    // 表示する要素ごとに判定する関数群
     // ==========
 
     // 4択問題
