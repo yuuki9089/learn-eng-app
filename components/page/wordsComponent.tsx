@@ -8,6 +8,9 @@ import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volum
 import CheckBox from '@mui/material/Checkbox';
 
 export default function WordsComponent() {
+    const handleClick = (num: number) => {
+        alert(`テスト${num}`);
+    }
     return (
         <>
             {/* Main */}
@@ -39,40 +42,77 @@ export default function WordsComponent() {
                             </div>
 
                             {/* 4択の表示 (英単語のみ)*/}
-                            {
-                                <div className='w-full flex flex-col gap-5'>
-                                    <div className='flex flex-wrap px-5 justify-center gap-8'>
-                                        <Card className='w-2/5 bg-[#0f172a]'>
-                                            <CardContent>
-                                                <CardTitle className='text-center'>
-                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                                </CardTitle>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className='w-2/5 bg-[#0f172a]'>
-                                            <CardContent>
-                                                <CardTitle className='text-center'>
-                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                                </CardTitle>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className='w-2/5 bg-[#0f172a]'>
-                                            <CardContent>
-                                                <CardTitle className='text-center'>
-                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                                </CardTitle>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className='w-2/5 bg-[#0f172a]'>
-                                            <CardContent>
-                                                <CardTitle className='text-center'>
-                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                                </CardTitle>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
+
+                            {/* グリッド */}
+                            <div className="w-full flex justify-center">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl auto-rows-fr ">
+
+                                    {[1, 2, 3, 4].map((num) => (
+                                        <div
+                                            key={num}
+                                            className="bg-[#0f172a] rounded-2xl shadow-lg"
+                                        >
+                                            <button
+                                                onClick={() => handleClick(num)}
+                                                className="w-full h-full p-10 flex items-center justify-center rounded-2xl hover:bg-slate-800 transition whitespace-normal"
+                                            >
+                                                <p className="text-xl text-slate-300 text-center break-words ">
+                                                    次のお題を翻訳してください {num}
+                                                </p>
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
-                            }
+                            </div>
+                            {/* </div> */}
+                            {/* <div className='w-full flex flex-col gap-5'>
+                                    <div className='flex flex-wrap px-5 justify-center gap-8'>
+                                        <Button className="w-2/5 h-full" onClick={handleClick}>
+                                            <p className="whitespace-normal text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                        </Button>
+                                        <Button className="w-2/5 h-full" onClick={handleClick}>
+                                            <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                        </Button>
+                                        <Button className="w-2/5 h-full" onClick={handleClick}>
+                                            <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                        </Button>
+                                        <Button className="w-2/5 h-full" onClick={handleClick}>
+                                            <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                        </Button> */}
+
+                            {/* <Card className='w-2/5 bg-[#0f172a]'>
+                                            <Button className="w-full h-full" onClick={handleClick}>
+                                                <CardContent>
+                                                    <CardTitle className='text-center'>
+                                                        <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                                    </CardTitle>
+                                                </CardContent>
+                                            </Button>
+                                        </Card> */}
+
+                            {/* <Card className='w-2/5 bg-[#0f172a]'>
+                                            <CardContent>
+                                                <CardTitle className='text-center'>
+                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                                </CardTitle>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className='w-2/5 bg-[#0f172a]'>
+                                            <CardContent>
+                                                <CardTitle className='text-center'>
+                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                                </CardTitle>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className='w-2/5 bg-[#0f172a]'>
+                                            <CardContent>
+                                                <CardTitle className='text-center'>
+                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                                </CardTitle>
+                                            </CardContent>
+                                        </Card> */}
+                            {/* </div>
+                                </div> */}
 
                             <div className='space-y-6 py-8'>
                                 {/* AI Result */}
