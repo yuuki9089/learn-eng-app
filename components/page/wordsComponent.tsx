@@ -54,7 +54,7 @@ export default function WordsComponent() {
                                         >
                                             <button
                                                 onClick={() => handleClick(num)}
-                                                className="w-full h-full p-10 flex items-center justify-center rounded-2xl hover:bg-slate-800 transition whitespace-normal"
+                                                className="w-full h-full p-10 flex items-center justify-center rounded-2xl hover:bg-slate-800 inline break-words whitespace-normal"
                                             >
                                                 <p className="text-xl text-slate-300 text-center break-words ">
                                                     次のお題を翻訳してください {num}
