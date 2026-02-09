@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
 import CheckBox from '@mui/material/Checkbox';
-import ShortTextsComponent from "@/components/shortTextsComponent";
+import ShortTextsComponent from "@/components/page/shortTextsComponent";
 
 export default async function ShortTexts() {
 
