@@ -6,11 +6,78 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
 import CheckBox from '@mui/material/Checkbox';
+import { useEffect, useState } from "react";
+import { isCorrect, QuestionEnglishWordResponse } from "@/types/questionEnglishWordResponse";
+import { MEnglishWord } from "@/types/server/englishWord";
+import { useRef } from "react";
+import { Confetti } from "../ui/confetti";
+import confetti from "canvas-confetti";
 
 export default function WordsComponent() {
-    const handleClick = (num: number) => {
-        alert(`テスト${num}`);
+
+
+    const [questions, setQuestions] = useState<QuestionEnglishWordResponse>();
+    const [isVisible, setIsVisible] = useState<boolean>(false);
+    const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);
+
+    useEffect(() => {
+        fetch("/api/questions/words")
+            .then(res => res.json())
+            .then(data => setQuestions(data));
+    }, []);
+
+    // 選択肢を押下した際の処理
+    const handleClick = (questions: QuestionEnglishWordResponse, q: MEnglishWord) => {
+        if (!isCorrect(questions, q)) {
+            alert("不正解...");
+            setIsCorrectAns(false);
+        }
+        else {
+            // alert("正解!!");
+            showFireWorksConfetti();
+            setIsCorrectAns(true);
+        }
+        setIsVisible(true);
     }
+
+    // Nextボタン押下時の関数
+    const nextHandleClick = () => {
+        fetch("/api/questions/words")
+            .then(res => res.json())
+            .then(data => setQuestions(data));
+        setIsVisible(false);
+    }
+
+    // Confetti関数
+    const showFireWorksConfetti = () => {
+        const duration = 2 * 1000
+        const animationEnd = Date.now() + duration
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
+    
+        const randomInRange = (min: number, max: number) =>
+          Math.random() * (max - min) + min
+    
+        const interval = window.setInterval(() => {
+          const timeLeft = animationEnd - Date.now()
+    
+          if (timeLeft <= 0) {
+            return clearInterval(interval)
+          }
+    
+          const particleCount = 50 * (timeLeft / duration)
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          })
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          })
+        }, 250)
+      }
+
     return (
         <>
             {/* Main */}
@@ -23,17 +90,20 @@ export default function WordsComponent() {
                             <h2 className="text-3xl font-bold">英単語</h2>
                         </div>
                         <div className="text-right text-xl text-muted-foreground">
-                            <div>No.100</div>
-                            <div>2025/11/3</div>
+                            <div>No.{questions?.question_id}</div>
+                            <div>{questions?.question_date}</div>
                         </div>
                     </div>
 
                     <div className="h-full flex flex-col justify-between">
                         <CardContent className="p-8 space-y-6">
-                            <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                            <p className="text-xl text-muted-foreground">次の単語の意味を以下の選択肢から選んでください</p>
                             <div className="w-full flex items-center gap-3 flex justify-between">
 
-                                <p className="text-2xl font-semibold">This is a pen.</p>
+                                <p className="text-2xl font-semibold">{
+                                    // 英単語
+                                    questions?.option.find(q => q.word_id === questions.word_id)?.english_word
+                                }</p>
                                 <div className="mt-auto pt-6 flex gap-3 items-center">
                                     <Volume2 size={22} className="cursor-pointer" />
                                     <CheckBox color='success' />
@@ -47,86 +117,59 @@ export default function WordsComponent() {
                             <div className="w-full flex justify-center">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl auto-rows-fr ">
 
-                                    {[1, 2, 3, 4].map((num) => (
+                                    {questions?.option.map((q) => (
                                         <div
-                                            key={num}
+                                            key={q.word_id}
                                             className="bg-[#0f172a] rounded-2xl shadow-lg"
                                         >
                                             <button
-                                                onClick={() => handleClick(num)}
+                                                onClick={() => handleClick(questions, q)}
                                                 className="w-full h-full p-10 flex items-center justify-center rounded-2xl hover:bg-slate-800 inline break-words whitespace-normal"
                                             >
                                                 <p className="text-xl text-slate-300 text-center break-words ">
-                                                    次のお題を翻訳してください {num}
+                                                    {q.meaning1}
                                                 </p>
                                             </button>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            {/* </div> */}
-                            {/* <div className='w-full flex flex-col gap-5'>
-                                    <div className='flex flex-wrap px-5 justify-center gap-8'>
-                                        <Button className="w-2/5 h-full" onClick={handleClick}>
-                                            <p className="whitespace-normal text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                        </Button>
-                                        <Button className="w-2/5 h-full" onClick={handleClick}>
-                                            <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                        </Button>
-                                        <Button className="w-2/5 h-full" onClick={handleClick}>
-                                            <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                        </Button>
-                                        <Button className="w-2/5 h-full" onClick={handleClick}>
-                                            <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                        </Button> */}
 
-                            {/* <Card className='w-2/5 bg-[#0f172a]'>
-                                            <Button className="w-full h-full" onClick={handleClick}>
-                                                <CardContent>
-                                                    <CardTitle className='text-center'>
-                                                        <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                                    </CardTitle>
-                                                </CardContent>
-                                            </Button>
-                                        </Card> */}
-
-                            {/* <Card className='w-2/5 bg-[#0f172a]'>
-                                            <CardContent>
-                                                <CardTitle className='text-center'>
-                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                                </CardTitle>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className='w-2/5 bg-[#0f172a]'>
-                                            <CardContent>
-                                                <CardTitle className='text-center'>
-                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                                </CardTitle>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className='w-2/5 bg-[#0f172a]'>
-                                            <CardContent>
-                                                <CardTitle className='text-center'>
-                                                    <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                                                </CardTitle>
-                                            </CardContent>
-                                        </Card> */}
-                            {/* </div>
-                                </div> */}
-
-                            <div className='space-y-6 py-8'>
-                                {/* AI Result */}
-                                <div className="border border-green-300 bg-green-50 rounded-xl p-4">
-                                    <p className="font-semibold text-green-600">AI採点結果：80%</p>
-                                    <p className="text-sm mt-1">ここにアドバイスが入る</p>
+                            {isVisible && isCorrectAns && (
+                                <div className='space-y-6 py-8'>
+                                    {/* AI Result */}
+                                    <div className="border border-green-300 bg-green-50 rounded-xl p-4">
+                                        <p className="font-semibold text-green-600">正解：
+                                            {
+                                                questions?.option
+                                                    .find(q => q.word_id === questions.word_id)?.meaning1
+                                            }</p>
+                                        <p className="text-sm mt-1">ここに例文が入る</p>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {isVisible && !isCorrectAns && (
+                                <div className='space-y-6 py-8'>
+                                    {/* AI Result */}
+                                    <div className="border border-blue-300 bg-blue-50 rounded-xl p-4">
+                                        <p className="font-semibold text-blue-600">
+                                                【不正解】
+                                                {
+                                                    questions?.option
+                                                        .find(q => q.word_id === questions.word_id)?.meaning1
+                                                }</p>
+                                        <p className="text-sm mt-1">ここに例文が入る</p>
+                                    </div>
+                                </div>
+                            )}
+
                         </CardContent>
 
                         <CardContent className="space-y-6">
                             <div className="mt-auto flex justify-between pt-6">
                                 <Button variant="destructive">スキップ</Button>
-                                <Button>Next</Button>
+                                <Button onClick={() => nextHandleClick()}>Next</Button>
                             </div>
                         </CardContent>
                     </div>
