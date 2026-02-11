@@ -1,5 +1,6 @@
 export type MEnglishWord =
     {
+        user_id: string;
         word_id: number;
         english_word: string;
         pos: string;

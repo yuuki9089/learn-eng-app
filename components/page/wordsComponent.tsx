@@ -12,19 +12,48 @@ import { MEnglishWord } from "@/types/server/englishWord";
 import { useRef } from "react";
 import { Confetti } from "../ui/confetti";
 import confetti from "canvas-confetti";
+import { EXSentenceRequest } from "@/types/exSentenceRequest";
+import { EXSentenceResponse } from "@/types/exSentenceResponse";
 
-export default function WordsComponent() {
-
+export type WordsComponentProps = {
+    user_id: string;
+};
+export default function WordsComponent({ user_id }: WordsComponentProps) {
 
     const [questions, setQuestions] = useState<QuestionEnglishWordResponse>();
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);
+    const [exSentence, setExSentence] = useState<EXSentenceResponse>();
+    
 
     useEffect(() => {
-        fetch("/api/questions/words")
-            .then(res => res.json())
-            .then(data => setQuestions(data));
-    }, []);
+        if (user_id === '') return;
+        initializeCallAPI();
+    }, [user_id]);
+
+    // 初回実行用のAPIを叩く関数
+    const initializeCallAPI = async () => {
+        // 既存の問題がある場合：取得
+        // ない場合：新規で問題を作成
+        const response = await fetch("/api/questions/words")
+        const data = await response.json() as QuestionEnglishWordResponse
+        setQuestions(data);
+
+        const body:EXSentenceRequest = {
+            user_id: user_id,
+            question_id: data.question_id,
+            word_id: data.word_id
+        }
+        const res = await fetch("/api/ex_sentence/words", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+        })
+        .then(res => res.json())
+        .then(data => setExSentence(data))
+    }
 
     // 選択肢を押下した際の処理
     const handleClick = (questions: QuestionEnglishWordResponse, q: MEnglishWord) => {
@@ -53,30 +82,30 @@ export default function WordsComponent() {
         const duration = 2 * 1000
         const animationEnd = Date.now() + duration
         const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
-    
+
         const randomInRange = (min: number, max: number) =>
-          Math.random() * (max - min) + min
-    
+            Math.random() * (max - min) + min
+
         const interval = window.setInterval(() => {
-          const timeLeft = animationEnd - Date.now()
-    
-          if (timeLeft <= 0) {
-            return clearInterval(interval)
-          }
-    
-          const particleCount = 50 * (timeLeft / duration)
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-          })
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-          })
+            const timeLeft = animationEnd - Date.now()
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval)
+            }
+
+            const particleCount = 50 * (timeLeft / duration)
+            confetti({
+                ...defaults,
+                particleCount,
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+            })
+            confetti({
+                ...defaults,
+                particleCount,
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+            })
         }, 250)
-      }
+    }
 
     return (
         <>
@@ -144,7 +173,8 @@ export default function WordsComponent() {
                                                 questions?.option
                                                     .find(q => q.word_id === questions.word_id)?.meaning1
                                             }</p>
-                                        <p className="text-sm mt-1">ここに例文が入る</p>
+                                        <p className="text-sm mt-1">{exSentence?.ex_sentence_en}</p>
+                                        <p className="text-sm mt-1">{exSentence?.ex_sentence_ja}</p>
                                     </div>
                                 </div>
                             )}
@@ -154,11 +184,11 @@ export default function WordsComponent() {
                                     {/* AI Result */}
                                     <div className="border border-blue-300 bg-blue-50 rounded-xl p-4">
                                         <p className="font-semibold text-blue-600">
-                                                【不正解】
-                                                {
-                                                    questions?.option
-                                                        .find(q => q.word_id === questions.word_id)?.meaning1
-                                                }</p>
+                                            【不正解】
+                                            {
+                                                questions?.option
+                                                    .find(q => q.word_id === questions.word_id)?.meaning1
+                                            }</p>
                                         <p className="text-sm mt-1">ここに例文が入る</p>
                                     </div>
                                 </div>
