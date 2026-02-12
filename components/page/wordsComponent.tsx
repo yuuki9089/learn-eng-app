@@ -44,7 +44,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
             question_id: data.question_id,
             word_id: data.word_id
         }
-        const res = await fetch("/api/ex_sentence/words", {
+        await fetch("/api/ex_sentence/words", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
