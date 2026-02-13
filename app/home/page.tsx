@@ -1,60 +1,68 @@
-"use client";
-
-
-import { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import Sidebar from "@/components/sidebar";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { CardHeader } from "@mui/material";
 import { Button } from "@/components/ui/button";
-import { Home, Book, FileText, Settings, User } from "lucide-react";
+import { PageMode } from "@/types/pageMode";
+import Link from "next/link";
 
+export default async function Settings() {
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-const [open, setOpen] = useState(false);
-const pathname = usePathname();
-
-
-return (
-<div className="flex h-screen bg-gray-50">
-{/* Hamburger */}
-<button
-className="md:hidden p-2 absolute top-4 left-4 z-50 bg-white shadow rounded"
-onClick={() => setOpen(!open)}
->
-☰
-</button>
-
-
-{/* Sidebar */}
-<aside
-className={`${open ? "translate-x-0" : "-translate-x-64"} md:translate-x-0 transition-transform w-64 bg-white shadow-xl p-6 flex flex-col gap-4 h-full fixed md:static z-40`}
->
-<h1 className="text-2xl font-bold mb-4">English App</h1>
-<nav className="flex flex-col gap-3">
-<NavLink href="/" active={pathname === "/"}><Home size={20} /> ホーム</NavLink>
-<NavLink href="/words" active={pathname === "/words"}><Book size={20} /> 英単語</NavLink>
-<NavLink href="/phrases" active={pathname === "/phrases"}><FileText size={20} /> 英文フレーズ</NavLink>
-<NavLink href="/short-texts" active={pathname === "/short-texts"}><FileText size={20} /> 200語短文</NavLink>
-<NavLink href="/settings" active={pathname === "/settings"}><Settings size={20} /> 設定</NavLink>
-<NavLink href="/logout" active={pathname === "/logout"} className="mt-4"><User size={20} /> ログアウト</NavLink>
-</nav>
-</aside>
-
-
-{/* Main */}
-<main className="flex-1 p-10 overflow-auto">{children}</main>
-</div>
-);
-}
-
-
-function NavLink({ href, active, children, className = "" }: any) {
-return (
-<Link
-href={href}
-className={`flex items-center gap-3 text-lg hover:text-blue-600 ${active ? "text-blue-600 font-semibold" : ""} ${className}`}
->
-{children}
-</Link>
-);
+    return (
+        <>
+            <div className="flex bg-[#f9fafb]">
+                <Sidebar />
+                {/* 英単語 */}
+                <div className="flex flex-col w-full">
+                    <h1 className="text-3xl pt-8 pl-5 font-bold">ホーム</h1>
+                    <div className="flex">
+                        <div className="w-full p-8">
+                            <Card className="w-full shadow-xl border-[#9f9f9f] border-[2px]">
+                                <CardTitle className="pl-5 text-3xl">
+                                    英単語
+                                </CardTitle>
+                                <CardContent className="text-xl text-[#6d7583]">
+                                    4択でクイズ形式で覚える英単語
+                                </CardContent>
+                                <div className="px-8">
+                                    <Link href={"/words"}>
+                                        <Button className="w-full">開く</Button>
+                                    </Link>
+                                </div>
+                            </Card>
+                        </div>
+                        <div className="w-full p-8">
+                            <Card className="w-full shadow-xl border-[#9f9f9f] border-[2px]">
+                                <CardTitle className="pl-5 text-3xl">
+                                    フレーズ
+                                </CardTitle>
+                                <CardContent className="text-xl text-[#6d7583]">
+                                    登録した単語から1文を出題
+                                </CardContent>
+                                <div className="px-8">
+                                    <Link href={"/phrases"}>
+                                        <Button className="w-full">開く</Button>
+                                    </Link>
+                                </div>
+                            </Card>
+                        </div>
+                        <div className="w-full p-8 ">
+                            <Card className="w-full shadow-xl border-[#9f9f9f] border-[2px]">
+                                <CardTitle className="pl-5 text-3xl">
+                                    センテンス
+                                </CardTitle>
+                                <CardContent className="text-xl text-[#6d7583]">
+                                    200語程度の短文の読解問題
+                                </CardContent>
+                                <div className="px-8">
+                                    <Link href={"/short-texts"}>
+                                        <Button className="w-full">開く</Button>
+                                    </Link>
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
 }
