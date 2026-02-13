@@ -6,17 +6,21 @@ import { EXSentenceRequest } from "@/types/exSentenceRequest";
 import { generateInferenceWithOllama } from "./ollama_ai";
 import { Chonburi } from "next/font/google";
 import { EXSentenceResponse } from "@/types/exSentenceResponse";
+import { OllamaApiPayload } from "@/types/ai/ollama_api_payload";
+import { OllamaApiResponse } from "@/types/ai/ollama_api_response";
+import { ExSentence } from "@/types/ai/ex_sentence";
 
 /**
  * 英単語の4択を作問する関数
  * @param user_id 
  */
 export async function CreateEnglsihWordQuestion(user_id: string): Promise<QuestionEnglishWordResponse> {
+    // 英単語マスタの単語情報を取得
     const english_words = await GetEnglishWord();
-    // console.log(english_words);
-    // console.log(english_words[0]);
+
     // m_english_wordsの数を取得
     const wordCount = english_words.length;
+
     // 1から英単語数で4個重複無しで乱数を弾く
     const set = new Set(); // 一意の数字しか許容しない
     while (set.size < 4) {
@@ -28,9 +32,8 @@ export async function CreateEnglsihWordQuestion(user_id: string): Promise<Questi
     const index: number = Math.floor(Math.random() * set.size) // 0～3
     const arr: MEnglishWord[] = Array.from(set) as MEnglishWord[]
     const correctWord: MEnglishWord = arr[index]
-    // console.log(correctWord);
 
-    // const question_num:number = Array.from(set)[Math.floor(Math.random() * set.size)].word_id
+    // 出題日を作成
     const genQuestionDate = new Date().toLocaleDateString("ja-JP", {
         year: "numeric", month: "2-digit",
         day: "2-digit"
@@ -68,24 +71,44 @@ function arrayShuffle(array: QuestionEnglishWordResponse[]) {
  */
 export async function GenEXSentence(data: EXSentenceRequest) {
     // word_idから英単語を取得
-    const english_words = await GetEnglishWord();
-    english_words.filter((word) => {
+    const english_all_words = await GetEnglishWord();
+    // word_idが一致した単語をMEnglishWord型で返却
+    // 1件もヒットしなかった場合はnull
+    const english_word: MEnglishWord | null = english_all_words.find((word) =>
         word.word_id === data.word_id
-    })
-    const result = await generateInferenceWithOllama()
-    console.log("responseテスト" + result);
-    const response:EXSentenceResponse={
+    ) ?? null
+
+    // Ollamaに渡すためのmessagesを作成
+    const chat_messages: OllamaApiPayload[] = [];
+    chat_messages.push({
+        "role": "system",
+        "content": "あなたは優秀な英語教師です。以下の単語を使用して例文を1文作成してください。\n"
+            + "「" + english_word?.english_word + "」\n"
+            + "ただし、回答は以下の条件に従って **JSON オブジェクトだけ** を返してください。"
+            + "- 返答は必ず `{\n  \"ex_sentence_en\": \"...\",\n  \"ex_sentence_ja\": ...\n}` の形で出力し、"
+            + " `ex_sentence_en` は文字列で「英語の例文」を1文で表します。"
+            + "- `ex_sentence_ja` は 文字列で、「ex_sentence_enで生成した例文の日本語訳」を示します。"
+            + "- 上記以外のテキストは一切出力しないでください。"
+            + "- JSON が不正になるような文字列は絶対に避けてください"
+    }
+    );
+
+    // Ollamaに例文(ja/en)を生成させる
+    const result: OllamaApiResponse = await generateInferenceWithOllama(chat_messages)
+
+    // 戻り値
+    const ex_sentence_obj: ExSentence = JSON.parse(result.message.content)
+
+    // 戻り値用にJSONを生成
+    const response: EXSentenceResponse = {
         user_id: data.user_id,
         question_id: data.question_id,
         word_id: data.word_id,
-        ex_sentence_en: "英語は未実装",
-        ex_sentence_ja: result.message.content
+        ex_sentence_en: ex_sentence_obj.ex_sentence_en,
+        ex_sentence_ja: ex_sentence_obj.ex_sentence_ja
     }
-    return response;
-    // AIに例文の作成を投げる(日本語)
-    // return generateInferenceWithOllama();
 
-    // AIに例文の作成を投げる(英語)
     // DBに登録
     // フロントへ返す
+    return response;
 }

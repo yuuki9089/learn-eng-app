@@ -14,6 +14,10 @@ import { Confetti } from "../ui/confetti";
 import confetti from "canvas-confetti";
 import { EXSentenceRequest } from "@/types/exSentenceRequest";
 import { EXSentenceResponse } from "@/types/exSentenceResponse";
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 export type WordsComponentProps = {
     user_id: string;
@@ -24,7 +28,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);
     const [exSentence, setExSentence] = useState<EXSentenceResponse>();
-    
+
 
     useEffect(() => {
         if (user_id === '') return;
@@ -39,7 +43,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         const data = await response.json() as QuestionEnglishWordResponse
         setQuestions(data);
 
-        const body:EXSentenceRequest = {
+        const body: EXSentenceRequest = {
             user_id: user_id,
             question_id: data.question_id,
             word_id: data.word_id
@@ -51,8 +55,8 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
             },
             body: JSON.stringify(body),
         })
-        .then(res => res.json())
-        .then(data => setExSentence(data))
+            .then(res => res.json())
+            .then(data => setExSentence(data))
     }
 
     // 選択肢を押下した際の処理
@@ -71,10 +75,8 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
 
     // Nextボタン押下時の関数
     const nextHandleClick = () => {
-        fetch("/api/questions/words")
-            .then(res => res.json())
-            .then(data => setQuestions(data));
         setIsVisible(false);
+        initializeCallAPI();
     }
 
     // Confetti関数
@@ -165,16 +167,34 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                             </div>
 
                             {isVisible && isCorrectAns && (
-                                <div className='space-y-6 py-8'>
+                                <div className='space-y-6 pt-5  '>
                                     {/* AI Result */}
                                     <div className="border border-green-300 bg-green-50 rounded-xl p-4">
+
                                         <p className="font-semibold text-green-600">正解：
                                             {
                                                 questions?.option
                                                     .find(q => q.word_id === questions.word_id)?.meaning1
                                             }</p>
-                                        <p className="text-sm mt-1">{exSentence?.ex_sentence_en}</p>
-                                        <p className="text-sm mt-1">{exSentence?.ex_sentence_ja}</p>
+                                        <Accordion
+                                            elevation={0}
+                                            sx={{
+                                                backgroundColor: '#f0fdf4', // 背景色
+                                                color: '"0000',              // 文字色（必要なら）
+                                                boxShadow: 'none',
+                                                '&:before': {
+                                                    display: 'none', // 上の仕切り線を消す
+                                                }
+                                            }
+                                            } >
+                                            <AccordionSummary
+                                                expandIcon={<ArrowDropDownIcon />}>
+                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_en}</p>
+                                            </AccordionSummary>
+                                            <AccordionDetails>
+                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_ja}</p>
+                                            </AccordionDetails>
+                                        </Accordion>
                                     </div>
                                 </div>
                             )}
@@ -189,7 +209,25 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                                 questions?.option
                                                     .find(q => q.word_id === questions.word_id)?.meaning1
                                             }</p>
-                                        <p className="text-sm mt-1">ここに例文が入る</p>
+                                        <Accordion
+                                            elevation={0}
+                                            sx={{
+                                                backgroundColor: '#eff6ff', // 背景色
+                                                color: '"0000',              // 文字色（必要なら）
+                                                boxShadow: 'none',
+                                                '&:before': {
+                                                    display: 'none', // 上の仕切り線を消す
+                                                }
+                                            }
+                                            } >
+                                            <AccordionSummary
+                                                expandIcon={<ArrowDropDownIcon />}>
+                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_en}</p>
+                                            </AccordionSummary>
+                                            <AccordionDetails>
+                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_ja}</p>
+                                            </AccordionDetails>
+                                        </Accordion>
                                     </div>
                                 </div>
                             )}
@@ -197,7 +235,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                         </CardContent>
 
                         <CardContent className="space-y-6">
-                            <div className="mt-auto flex justify-between pt-6">
+                            <div className="mt-auto flex justify-between">
                                 <Button variant="destructive">スキップ</Button>
                                 <Button onClick={() => nextHandleClick()}>Next</Button>
                             </div>
