@@ -18,17 +18,25 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
 
 export type WordsComponentProps = {
     user_id: string;
 };
 export default function WordsComponent({ user_id }: WordsComponentProps) {
 
-    const [questions, setQuestions] = useState<QuestionEnglishWordResponse>();
+    const [questions, setQuestions] = useState<QuestionEnglishWordResponse>({
+        user_id: "",
+        question_id: 0,
+        word_id: 0,
+        question_date: "",
+        audio_file_path: "",
+        option: [],
+    });
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);
     const [exSentence, setExSentence] = useState<EXSentenceResponse>();
-
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     useEffect(() => {
         if (user_id === '') return;
@@ -60,24 +68,57 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     }
 
     // 選択肢を押下した際の処理
-    const handleClick = (questions: QuestionEnglishWordResponse, q: MEnglishWord) => {
+    const handleClick = async (questions: QuestionEnglishWordResponse, q: MEnglishWord) => {
+        let scoringResult: number = 0;
         if (!isCorrect(questions, q)) {
             alert("不正解...");
             setIsCorrectAns(false);
+            scoringResult = 2; // 不正解
         }
         else {
             // alert("正解!!");
             showFireWorksConfetti();
             setIsCorrectAns(true);
+            scoringResult = 1; // 正解
         }
         setIsVisible(true);
+        setIsSubmitting(true);
+
+        registerAnsResultEnglishWord(questions, scoringResult)
     }
 
     // Nextボタン押下時の関数
     const nextHandleClick = () => {
         setIsVisible(false);
+        setIsSubmitting(false);
         initializeCallAPI();
     }
+
+    // スキップボタン押下時の関数
+    const skipHandleClick = () => {
+        const scoringResult = 3; // スキップ
+        registerAnsResultEnglishWord(questions, scoringResult)
+        initializeCallAPI(); // 次の問題へ
+    }
+
+    // DBに回答結果を登録
+    const registerAnsResultEnglishWord = async (questions: QuestionEnglishWordResponse, scoringResult: number) => {
+
+        const request: RegisterAnsResultEnglishWordRequest = {
+            user_id: user_id,
+            question_id: questions.question_id,
+            scoring_result: scoringResult
+        }
+
+        await fetch("/api/question_ans/words", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+        })
+    }
+
 
     // Confetti関数
     const showFireWorksConfetti = () => {
@@ -156,6 +197,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                             <button
                                                 onClick={() => handleClick(questions, q)}
                                                 className="w-full h-full p-10 flex items-center justify-center rounded-2xl hover:bg-slate-800 inline break-words whitespace-normal"
+                                                disabled={isSubmitting}
                                             >
                                                 <p className="text-xl text-slate-300 text-center break-words ">
                                                     {q.meaning1}
@@ -236,8 +278,14 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
 
                         <CardContent className="space-y-6">
                             <div className="mt-auto flex justify-between">
-                                <Button variant="destructive">スキップ</Button>
-                                <Button onClick={() => nextHandleClick()}>Next</Button>
+                                <Button variant="destructive"
+                                    onClick={() => skipHandleClick()}
+                                    disabled={isSubmitting}
+                                >スキップ</Button>
+                                <Button
+                                    onClick={() => nextHandleClick()}
+                                    disabled={!isSubmitting}
+                                >Next</Button>
                             </div>
                         </CardContent>
                     </div>

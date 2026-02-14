@@ -4,6 +4,7 @@ import { MEnglishWord } from "@/types/server/englishWord";
 import { QuestionEnglishWordResponse } from "@/types/questionEnglishWordResponse";
 import { type } from "os";
 import { EXSentenceResponse } from "@/types/exSentenceResponse";
+import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
 
 /**
  * 英単語マスタを取得
@@ -91,7 +92,7 @@ export async function InsertQuestionEnglishWord(request: QuestionEnglishWordResp
 }
 
 /**
- * 英単語出題テーブルに登録
+ * 例文をDBに登録(更新)
  * @param request 
  * @returns 
  */
@@ -109,6 +110,33 @@ export async function RegesterEXSentenceEnglishWord(request: EXSentenceResponse)
       ]
     );
     console.log("DB_inserted");
+    return NextResponse.json({
+      success: true,
+    });
+  }
+  catch (error) {
+    console.error("INSERT ERROR:", error);
+    return NextResponse.json(
+      { error: "DB Insert Failed" },
+      { status: 500 }
+    );
+  }
+}
+
+
+export async function RegesterAnsResultEnglishWord(request: RegisterAnsResultEnglishWordRequest) {
+  try {
+    const [result]: any = await pool.execute(
+      `UPDATE t_question_english_word tqew
+      SET tqew.scoring_result = ?
+      WHERE tqew.user_id = ? AND tqew.question_id = ?`,
+      [
+        request.scoring_result,
+        request.user_id,
+        request.question_id
+      ]
+    );
+    console.log("DB_inserted registerAns");
     return NextResponse.json({
       success: true,
     });
