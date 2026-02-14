@@ -1,5 +1,6 @@
 import { QuestionEnglishWordResponse } from "@/types/questionEnglishWordResponse";
-import { GetEnglishWord } from "./db_controls";
+import { GetEnglishWord, GetMaxQuestionID, RegesterEXSentenceEnglishWord } from "./db_controls";
+import { InsertQuestionEnglishWord } from "./db_controls";
 import { number } from "motion";
 import { MEnglishWord } from "@/types/server/englishWord";
 import { EXSentenceRequest } from "@/types/exSentenceRequest";
@@ -16,10 +17,13 @@ import { ExSentence } from "@/types/ai/ex_sentence";
  */
 export async function CreateEnglsihWordQuestion(user_id: string): Promise<QuestionEnglishWordResponse> {
     // 英単語マスタの単語情報を取得
-    const english_words = await GetEnglishWord();
+    const english_words: MEnglishWord[] = await GetEnglishWord();
 
     // m_english_wordsの数を取得
     const wordCount = english_words.length;
+
+    // question_idのmax値を取得
+    const current_question_max_id: number = await GetMaxQuestionID(user_id);
 
     // 1から英単語数で4個重複無しで乱数を弾く
     const set = new Set(); // 一意の数字しか許容しない
@@ -42,12 +46,16 @@ export async function CreateEnglsihWordQuestion(user_id: string): Promise<Questi
     // 戻り値はフロントに返すJSON
     const response: QuestionEnglishWordResponse = {
         user_id: user_id,
-        question_id: 1,
+        question_id: current_question_max_id + 1,
         word_id: correctWord.word_id,
         question_date: genQuestionDate,
         audio_file_path: "",
         option: arr
     }
+
+    //DB(英単語出題テーブル)に登録
+    InsertQuestionEnglishWord(response)
+
     return response;
 }
 
@@ -109,6 +117,8 @@ export async function GenEXSentence(data: EXSentenceRequest) {
     }
 
     // DBに登録
+    RegesterEXSentenceEnglishWord(response)
+
     // フロントへ返す
     return response;
 }
