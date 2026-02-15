@@ -32,6 +32,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         question_date: "",
         audio_file_path: "",
         option: [],
+        scoring_result: 0
     });
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);

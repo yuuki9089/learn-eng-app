@@ -62,9 +62,10 @@ export async function InsertQuestionEnglishWord(request: QuestionEnglishWordResp
         option1,
         option2,
         option3,
-        option4
+        option4,
+        scoring_result
       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         request.user_id,
         request.question_id,
@@ -74,7 +75,8 @@ export async function InsertQuestionEnglishWord(request: QuestionEnglishWordResp
         request.option[0].meaning1,
         request.option[1].meaning1,
         request.option[2].meaning1,
-        request.option[3].meaning1
+        request.option[3].meaning1,
+        request.scoring_result
       ]
     );
     console.log("DB_inserted");

@@ -9,6 +9,7 @@ export type QuestionEnglishWordResponse = {
     question_date: DateTime;
     audio_file_path: string;
     option: MEnglishWord[];
+    scoring_result:number
 }
 
 /// 正誤判定する関数

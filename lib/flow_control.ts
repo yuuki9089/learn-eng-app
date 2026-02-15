@@ -50,7 +50,8 @@ export async function CreateEnglsihWordQuestion(user_id: string): Promise<Questi
         word_id: correctWord.word_id,
         question_date: genQuestionDate,
         audio_file_path: "",
-        option: arr
+        option: arr,
+        scoring_result: 0
     }
 
     //DB(英単語出題テーブル)に登録
