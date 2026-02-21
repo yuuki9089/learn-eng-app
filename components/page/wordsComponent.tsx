@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
 import CheckBox from '@mui/material/Checkbox';
 import { useEffect, useState } from "react";
-import { isCorrect, QuestionEnglishWordResponse } from "@/types/questionEnglishWordResponse";
-import { MEnglishWord } from "@/types/server/englishWord";
+import { isCorrect, QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
+import { MEnglishWord } from "@/types/db/englishWord";
 import { useRef } from "react";
 import { Confetti } from "../ui/confetti";
 import confetti from "canvas-confetti";
-import { EXSentenceRequest } from "@/types/exSentenceRequest";
-import { EXSentenceResponse } from "@/types/exSentenceResponse";
+import { EXSentenceRequest } from "@/types/englishWord/exSentenceRequest";
+import { EXSentenceResponse } from "@/types/englishWord/exSentenceResponse";
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -32,7 +32,10 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         question_date: "",
         audio_file_path: "",
         option: [],
-        scoring_result: 0
+        favorite_flag: false,
+        scoring_result: 0,
+        ex_sentence_en: "",
+        ex_sentence_ja: ""
     });
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);
@@ -42,30 +45,24 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     useEffect(() => {
         if (user_id === '') return;
         initializeCallAPI();
+
     }, [user_id]);
 
     // 初回実行用のAPIを叩く関数
+    // 過去に解いた問題があるかを確認
+    // ない：新規で作問
+    // ある：過去の問題情報を取得
     const initializeCallAPI = async () => {
-        // 既存の問題がある場合：取得
-        // ない場合：新規で問題を作成
+        const response = await fetch("/api/fetch/words")
+        const data = await response.json() as QuestionEnglishWordResponse
+        setQuestions(data);
+    }
+
+    // 新規問題を作成するAPIを叩く関数
+    const nextProblemCallAPI = async () => {
         const response = await fetch("/api/questions/words")
         const data = await response.json() as QuestionEnglishWordResponse
         setQuestions(data);
-
-        const body: EXSentenceRequest = {
-            user_id: user_id,
-            question_id: data.question_id,
-            word_id: data.word_id
-        }
-        await fetch("/api/ex_sentence/words", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(body),
-        })
-            .then(res => res.json())
-            .then(data => setExSentence(data))
     }
 
     // 選択肢を押下した際の処理
@@ -92,14 +89,14 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     const nextHandleClick = () => {
         setIsVisible(false);
         setIsSubmitting(false);
-        initializeCallAPI();
+        nextProblemCallAPI();
     }
 
     // スキップボタン押下時の関数
     const skipHandleClick = () => {
         const scoringResult = 3; // スキップ
         registerAnsResultEnglishWord(questions, scoringResult)
-        initializeCallAPI(); // 次の問題へ
+        nextProblemCallAPI(); // 次の問題へ
     }
 
     // DBに回答結果を登録
@@ -232,10 +229,10 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                             } >
                                             <AccordionSummary
                                                 expandIcon={<ArrowDropDownIcon />}>
-                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_en}</p>
+                                                <p className="text-lm mt-1">{questions.ex_sentence_en}</p>
                                             </AccordionSummary>
                                             <AccordionDetails>
-                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_ja}</p>
+                                                <p className="text-lm mt-1">{questions.ex_sentence_ja}</p>
                                             </AccordionDetails>
                                         </Accordion>
                                     </div>
@@ -265,10 +262,10 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                             } >
                                             <AccordionSummary
                                                 expandIcon={<ArrowDropDownIcon />}>
-                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_en}</p>
+                                                <p className="text-lm mt-1">{questions.ex_sentence_en}</p>
                                             </AccordionSummary>
                                             <AccordionDetails>
-                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_ja}</p>
+                                                <p className="text-lm mt-1">{questions.ex_sentence_ja}</p>
                                             </AccordionDetails>
                                         </Accordion>
                                     </div>

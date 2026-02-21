@@ -1,5 +1,5 @@
 import { DateTime } from "next-auth/providers/kakao";
-import { MEnglishWord } from "./server/englishWord";
+import { MEnglishWord } from "./db/englishWord";
 
 export type RegisterQuestionEnglishWord = {
     user_id: string;

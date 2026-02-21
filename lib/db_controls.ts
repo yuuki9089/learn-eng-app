@@ -1,10 +1,11 @@
 import { NextResponse, userAgent } from "next/server";
 import { pool } from "@/lib/db";
-import { MEnglishWord } from "@/types/server/englishWord";
-import { QuestionEnglishWordResponse } from "@/types/questionEnglishWordResponse";
+import { MEnglishWord } from "@/types/db/englishWord";
+import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
 import { type } from "os";
-import { EXSentenceResponse } from "@/types/exSentenceResponse";
+import { EXSentenceResponse } from "@/types/englishWord/exSentenceResponse";
 import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
+import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionEnglishWord";
 
 /**
  * 英単語マスタを取得
@@ -25,6 +26,11 @@ export async function GetEnglishWord(): Promise<MEnglishWord[]> {
   }
 }
 
+/**
+ * user_idを基に登録してあるquestion_idの最大値を取得する関数
+ * @param user_id 
+ * @returns 
+ */
 export async function GetMaxQuestionID(user_id: string): Promise<number> {
   try {
     const [rows] = await pool.query(
@@ -63,20 +69,26 @@ export async function InsertQuestionEnglishWord(request: QuestionEnglishWordResp
         option2,
         option3,
         option4,
-        scoring_result
+        scoring_result,
+        favorite_flag,
+        ex_sentence_en,
+        ex_sentence_ja
       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         request.user_id,
         request.question_id,
         request.word_id,
         request.question_date,
         request.audio_file_path,
-        request.option[0].meaning1,
-        request.option[1].meaning1,
-        request.option[2].meaning1,
-        request.option[3].meaning1,
-        request.scoring_result
+        request.option[0].word_id,
+        request.option[1].word_id,
+        request.option[2].word_id,
+        request.option[3].word_id,
+        request.scoring_result,
+        request.favorite_flag,
+        request.ex_sentence_en,
+        request.ex_sentence_ja
       ]
     );
     console.log("DB_inserted");
@@ -125,7 +137,11 @@ export async function RegesterEXSentenceEnglishWord(request: EXSentenceResponse)
   }
 }
 
-
+/**
+ * DBに英単語の回答結果を登録する関数
+ * @param request 
+ * @returns 
+ */
 export async function RegesterAnsResultEnglishWord(request: RegisterAnsResultEnglishWordRequest) {
   try {
     const [result]: any = await pool.execute(
@@ -149,5 +165,39 @@ export async function RegesterAnsResultEnglishWord(request: RegisterAnsResultEng
       { error: "DB Insert Failed" },
       { status: 500 }
     );
+  }
+}
+
+export async function GetCurrentQuestionEnglishWord(user_id: string, question_id: number): Promise<searchCurrentQuestionEnglishWord> {
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+        user_id,
+        question_id,
+        word_id,
+        question_date,
+        audio_file_path,
+        option1,
+        option2,
+        option3,
+        option4,
+        scoring_result,
+        favorite_flag,
+        ex_sentence_en,
+        ex_sentence_ja 
+        FROM t_question_english_word tqew 
+        WHERE tqew.user_id = ? AND tqew.question_id = ?`
+       ,
+      [
+        user_id,
+        question_id,
+      ]
+    );
+    const a = rows as searchCurrentQuestionEnglishWord[];
+    return a[0];
+
+  } catch (err) {
+    console.error(err);
+    throw err;
   }
 }

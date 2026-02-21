@@ -1,21 +1,23 @@
-import { QuestionEnglishWordResponse } from "@/types/questionEnglishWordResponse";
-import { GetEnglishWord, GetMaxQuestionID, RegesterEXSentenceEnglishWord } from "./db_controls";
+import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
+import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, RegesterEXSentenceEnglishWord } from "./db_controls";
 import { InsertQuestionEnglishWord } from "./db_controls";
 import { number } from "motion";
-import { MEnglishWord } from "@/types/server/englishWord";
-import { EXSentenceRequest } from "@/types/exSentenceRequest";
+import { MEnglishWord } from "@/types/db/englishWord";
+import { EXSentenceRequest } from "@/types/englishWord/exSentenceRequest";
 import { generateInferenceWithOllama } from "./ollama_ai";
 import { Chonburi } from "next/font/google";
-import { EXSentenceResponse } from "@/types/exSentenceResponse";
+import { EXSentenceResponse } from "@/types/englishWord/exSentenceResponse";
 import { OllamaApiPayload } from "@/types/ai/ollama_api_payload";
 import { OllamaApiResponse } from "@/types/ai/ollama_api_response";
 import { ExSentence } from "@/types/ai/ex_sentence";
+import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionEnglishWord";
+import { DateTime } from "next-auth/providers/kakao";
 
 /**
  * 英単語の4択を作問する関数
  * @param user_id 
  */
-export async function CreateEnglsihWordQuestion(user_id: string): Promise<QuestionEnglishWordResponse> {
+export async function CreateEnglishWordQuestion(user_id: string): Promise<QuestionEnglishWordResponse> {
     // 英単語マスタの単語情報を取得
     const english_words: MEnglishWord[] = await GetEnglishWord();
 
@@ -37,21 +39,27 @@ export async function CreateEnglsihWordQuestion(user_id: string): Promise<Questi
     const arr: MEnglishWord[] = Array.from(set) as MEnglishWord[]
     const correctWord: MEnglishWord = arr[index]
 
-    // 出題日を作成
-    const genQuestionDate = new Date().toLocaleDateString("ja-JP", {
-        year: "numeric", month: "2-digit",
-        day: "2-digit"
-    })
+
+    const sentenceReq: EXSentenceRequest = {
+        user_id: user_id,
+        question_id: current_question_max_id + 1,
+        word_id: correctWord.word_id
+    }
+    // 例文の登録
+    const sentenceRes = await GenEXSentence(sentenceReq);
 
     // 戻り値はフロントに返すJSON
     const response: QuestionEnglishWordResponse = {
         user_id: user_id,
         question_id: current_question_max_id + 1,
         word_id: correctWord.word_id,
-        question_date: genQuestionDate,
+        question_date: ProcessQuestionDate(new Date()),
         audio_file_path: "",
         option: arr,
-        scoring_result: 0
+        scoring_result: 0,
+        favorite_flag: false,
+        ex_sentence_en: sentenceRes.ex_sentence_en,
+        ex_sentence_ja: sentenceRes.ex_sentence_ja
     }
 
     //DB(英単語出題テーブル)に登録
@@ -59,6 +67,57 @@ export async function CreateEnglsihWordQuestion(user_id: string): Promise<Questi
 
     return response;
 }
+
+/**
+ * 過去の問題があるかを確認する関数
+ * 過去にといている問題がなければ新規で問題を作成
+ * @param user_id 
+ * @returns 
+ */
+export async function FetchQuestionEnglishWord(user_id: string): Promise<QuestionEnglishWordResponse> {
+    // 英単語マスタの単語情報を取得
+    const english_words: MEnglishWord[] = await GetEnglishWord();
+
+    // m_english_wordsの数を取得
+    const wordCount = english_words.length;
+
+    // question_idのmax値を取得
+    const current_question_max_id: number = await GetMaxQuestionID(user_id);
+
+    // 過去の問題がある
+    if (current_question_max_id != null) {
+        // t_quesiton_english_wordのMax値の内容を取得してquestionsにはめる
+
+        // t_question_max_idを基にレスポンスに必要な情報をDBから取得
+        const maxQuestionInfo: searchCurrentQuestionEnglishWord = await GetCurrentQuestionEnglishWord(user_id, current_question_max_id)
+
+        // optionのword_idを基にMEglishWordを取得
+        const options: MEnglishWord[] = [];
+        options.push(GetMEnglshWordInfo(english_words, maxQuestionInfo.option1));
+        options.push(GetMEnglshWordInfo(english_words, maxQuestionInfo.option2));
+        options.push(GetMEnglshWordInfo(english_words, maxQuestionInfo.option3));
+        options.push(GetMEnglshWordInfo(english_words, maxQuestionInfo.option4));
+
+
+        // response用にJSONにマッピング
+        const response: QuestionEnglishWordResponse = {
+            user_id: maxQuestionInfo.user_id,
+            question_id: maxQuestionInfo.question_id,
+            word_id: maxQuestionInfo.word_id,
+            question_date: ProcessQuestionDate(new Date(maxQuestionInfo.question_date)),
+            audio_file_path: maxQuestionInfo.audio_file_path,
+            option: options,
+            favorite_flag: maxQuestionInfo.favorite_flag,
+            scoring_result: maxQuestionInfo.scoring_result,
+            ex_sentence_en: maxQuestionInfo.ex_sentence_en,
+            ex_sentence_ja: maxQuestionInfo.ex_sentence_ja
+        }
+        return response;
+    }
+
+    return CreateEnglishWordQuestion(user_id)
+}
+
 
 // 渡された配列の要素の順番をシャッフルします．
 function arrayShuffle(array: QuestionEnglishWordResponse[]) {
@@ -78,7 +137,7 @@ function arrayShuffle(array: QuestionEnglishWordResponse[]) {
  * 例文の日本語と英語を作成して
  * フロントとDBに登録する関数
  */
-export async function GenEXSentence(data: EXSentenceRequest) {
+export async function GenEXSentence(data: EXSentenceRequest): Promise<EXSentenceResponse> {
     // word_idから英単語を取得
     const english_all_words = await GetEnglishWord();
     // word_idが一致した単語をMEnglishWord型で返却
@@ -117,9 +176,21 @@ export async function GenEXSentence(data: EXSentenceRequest) {
         ex_sentence_ja: ex_sentence_obj.ex_sentence_ja
     }
 
-    // DBに登録
-    RegesterEXSentenceEnglishWord(response)
+    // // DBに登録
+    // RegesterEXSentenceEnglishWord(response)
 
     // フロントへ返す
     return response;
+}
+
+function GetMEnglshWordInfo(english_words: MEnglishWord[], word_id: number): MEnglishWord {
+    // 英単語マスタ情報からword_idが一致している単語を取得
+    return english_words.filter((w) => w.word_id === word_id)[0]
+}
+
+function ProcessQuestionDate(date: Date) {
+    return date.toLocaleDateString("ja-JP", {
+        year: "numeric", month: "2-digit",
+        day: "2-digit"
+    })
 }

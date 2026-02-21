@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { CreateEnglishWordQuestion } from "@/lib/flow_control";
+import { CreateEnglishWordQuestion, FetchQuestionEnglishWord } from "@/lib/flow_control";
 import { QuestionRequest } from "@/types/question";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     // JSONで受け取ることの定義
     // const body:QuestionRequest = await request.json();
-    return NextResponse.json(await CreateEnglishWordQuestion(user_id));
+    return NextResponse.json(await FetchQuestionEnglishWord(user_id));
 }
     catch (e) {
     return NextResponse.json(
