@@ -6,6 +6,7 @@ import { type } from "os";
 import { EXSentenceResponse } from "@/types/englishWord/exSentenceResponse";
 import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
 import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionEnglishWord";
+import { FavoriteRequest } from "@/types/favoriteRequest";
 
 /**
  * 英単語マスタを取得
@@ -187,7 +188,7 @@ export async function GetCurrentQuestionEnglishWord(user_id: string, question_id
         ex_sentence_ja 
         FROM t_question_english_word tqew 
         WHERE tqew.user_id = ? AND tqew.question_id = ?`
-       ,
+      ,
       [
         user_id,
         question_id,
@@ -195,6 +196,38 @@ export async function GetCurrentQuestionEnglishWord(user_id: string, question_id
     );
     const a = rows as searchCurrentQuestionEnglishWord[];
     return a[0];
+
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+export async function PostFavoriteFlag(request: FavoriteRequest) {
+  try {
+    let table_name: string = "";
+    switch (request.page_mode) {
+      case "英単語":
+        table_name = "t_question_english_word"
+        break;
+      case "英文フレーズ":
+        table_name = "t_question_phrase"
+        break;
+      case "英短文":
+        table_name = "t_question_sentence"
+        break;
+    }
+
+    const [rows] = await pool.query(
+      `UPDATE ${table_name} tq 
+       SET tq.favorite_flag = ? 
+       WHERE tq.user_id = ? AND tq.question_id = ?`,
+      [
+        request.favorite_flag,
+        request.user_id,
+        request.question_id
+      ]
+    );
 
   } catch (err) {
     console.error(err);

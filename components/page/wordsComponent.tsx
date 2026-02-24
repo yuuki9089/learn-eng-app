@@ -19,6 +19,7 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
+import { FavoriteRequest } from "@/types/favoriteRequest";
 
 export type WordsComponentProps = {
     user_id: string;
@@ -41,6 +42,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);
     const [exSentence, setExSentence] = useState<EXSentenceResponse>();
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [checked, setChecked] = useState(false);
 
     useEffect(() => {
         if (user_id === '') return;
@@ -56,6 +58,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         const response = await fetch("/api/fetch/words")
         const data = await response.json() as QuestionEnglishWordResponse
         setQuestions(data);
+        setChecked(data.favorite_flag);
     }
 
     // 新規問題を作成するAPIを叩く関数
@@ -74,7 +77,6 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
             scoringResult = 2; // 不正解
         }
         else {
-            // alert("正解!!");
             showFireWorksConfetti();
             setIsCorrectAns(true);
             scoringResult = 1; // 正解
@@ -97,6 +99,24 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         const scoringResult = 3; // スキップ
         registerAnsResultEnglishWord(questions, scoringResult)
         nextProblemCallAPI(); // 次の問題へ
+    }
+
+    // DBに回答結果を登録
+    const favoriteFlagCallAPI = async (favorite_flag:boolean) => {
+        const request: FavoriteRequest = {
+            user_id: user_id,
+            question_id: questions.question_id,
+            favorite_flag: favorite_flag,
+            page_mode: PageMode.WORDS
+        }
+
+        await fetch("/api/favorite_flag", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+        })
     }
 
     // DBに回答結果を登録
@@ -148,6 +168,12 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         }, 250)
     }
 
+    // checkboxのhandle関数
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setChecked(event.target.checked);
+        favoriteFlagCallAPI(event.target.checked);
+    };
+
     return (
         <>
             {/* Main */}
@@ -176,7 +202,11 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                 }</p>
                                 <div className="mt-auto pt-6 flex gap-3 items-center">
                                     <Volume2 size={22} className="cursor-pointer" />
-                                    <CheckBox color='success' />
+                                    <CheckBox
+                                        color='success'
+                                        checked={checked}
+                                        onChange={handleChange}
+                                    />
                                     {/* <Check className="text-green-500" /> */}
                                 </div>
                             </div>
