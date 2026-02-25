@@ -1,5 +1,5 @@
 import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
-import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, RegesterEXSentenceEnglishWord } from "./db_controls";
+import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetTQuestionEnglishWord, RegesterEXSentenceEnglishWord } from "./db_controls";
 import { InsertQuestionEnglishWord } from "./db_controls";
 import { number } from "motion";
 import { MEnglishWord } from "@/types/db/englishWord";
@@ -12,6 +12,10 @@ import { OllamaApiResponse } from "@/types/ai/ollama_api_response";
 import { ExSentence } from "@/types/ai/ex_sentence";
 import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionEnglishWord";
 import { DateTime } from "next-auth/providers/kakao";
+import { historyRequest } from "@/types/historyRequest";
+import { PageMode } from "@/types/pageMode";
+import { t_question_english_word } from "@/types/db/t_question_english_word";
+import { historyResponse } from "@/types/historyResponse";
 
 /**
  * 英単語の4択を作問する関数
@@ -193,4 +197,40 @@ function ProcessQuestionDate(date: Date) {
         year: "numeric", month: "2-digit",
         day: "2-digit"
     })
+}
+
+/**
+ * 
+ */
+export async function GetQuestionHistory(request: historyRequest): Promise<historyResponse[]> {
+    console.log("GetQuestionHistory")
+    let response: historyResponse[] = []
+
+    // PageModeを基に取得するテーブルでswitch/case
+    switch (request.page_mode) {
+        // t_question_english_word
+        case PageMode.WORDS:
+            const english_words_history: t_question_english_word[] = await GetTQuestionEnglishWord();
+
+            response = english_words_history.map((item) => ({
+                user_id: item.user_id,
+                question_id: item.question_id,
+                english_word: "テスト",
+                question_date: item.question_date,
+                summarization: "",
+                result: item.scoring_result,
+            }));
+            // console.log(english_words_history);
+
+        // t_question_phrase
+        // case PageMode.PHRASES:
+        //     targetTable = "t_question_phrase";
+        //     break;
+
+        // t_question_sentence
+        // case PageMode.SHORT_TEXTS:
+        //     targetTable = "t_question_sentence";
+        //     break;
+    }
+    return response;
 }

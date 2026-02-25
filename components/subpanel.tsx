@@ -8,18 +8,48 @@ import { Box } from "@mui/material";
 import { useState } from "react";
 import TextField from "@mui/material/TextField"; // プルダウン
 import Autocomplete from "@mui/material/Autocomplete"; // プルダウンの自動補完
+import { historyResponse } from "@/types/historyResponse";
+import { conditionds } from "@/types/conditions";
+import { historyRequest } from "@/types/historyRequest";
+import { PageMode } from "@/types/pageMode";
 
+type Props = {
+    user_id: string;
+    page_mode: PageMode;
+}
 
-export default function SubPanel() {
+export default function SubPanel({ user_id, page_mode }: Props) {
     const [selectedTab, setSelectedTab] = useState("1");
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
         setSelectedTab(newValue);
     };
     const options = [
-        { label: '正解', id: 1 },
-        { label: '不正解', id: 2 },
-        { label: 'お気に入り', id: 3 },
+        { label: conditionds.CORRECT, id: 1 },
+        { label: conditionds.INCORRECT, id: 2 },
+        { label: conditionds.FAVORITE, id: 3 },
     ]
+
+
+    const selectedHandleChange = async (conditions: string) => {
+        const request: historyRequest = {
+            user_id: user_id,
+            page_mode: page_mode,
+            conditions: conditions
+        }
+        console.log("通った")
+
+        const response = await fetch("/api/history", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+        })
+
+        console.log(response);
+
+    }
+
     return (
         <>
             {/* Right panel */}
@@ -45,27 +75,63 @@ export default function SubPanel() {
                         <Autocomplete
                             disablePortal
                             options={options}
-                            renderInput={(params) => <TextField {...params} label="履歴の絞り込み" />}
+                            // 選択変更時
+                            onChange={(event, newValue) => {
+                                if (newValue) {
+                                    console.log("選択された値:", newValue);
+                                    console.log("id:", newValue.id);
+                                    console.log("label:", newValue.label);
+
+                                    selectedHandleChange(newValue?.label ?? "");
+                                }
+                            }}
+                            renderInput={(params) => <TextField
+                                // caption
+                                {...params} label="履歴の絞り込み"
+
+                                // 絞り込み条件の変更時
+                                onChange={(e) => selectedHandleChange(e.target.value)}
+                            />}
+
                         />
                     </div>
-
-
-                    <HistoryItem no="No.100" text="example 1" ok />
-                    <HistoryItem no="No.101" text="example 2" />
+                    <HistoryItem no="No.100" text="example 1" result="ok" />
+                    <HistoryItem no="No.101" text="example 2" result="ng" />
                 </CardContent>
             </Card>
         </>
     );
 
-    function HistoryItem({ no, text, ok }: any) {
+    function HistoryItem({ no, text, result }: any) {
+        function ansResult(result: string) {
+            switch (result) {
+                case "ok":
+                    return "◯"
+                case "skip":
+                    return "△"
+                case "ng":
+                    return "✕"
+            }
+
+        }
+        function textColor(result: string) {
+            switch (result) {
+                case "ok":
+                    return "text-green-500"
+                case "skip":
+                    return "text-blue-500"
+                case "ng":
+                    return "text-red-500"
+            }
+        }
         return (
             <div className="border rounded-lg p-3 flex justify-between items-center">
                 <div>
                     <p className="text-xs text-muted-foreground">{no}</p>
                     <p className="text-sm font-medium">{text}</p>
                 </div>
-                <div className={ok ? "text-green-500" : "text-red-500"}>
-                    {ok ? "○" : "×"}
+                <div className={textColor(result)}>
+                    {ansResult(result)}
                 </div>
             </div>
         );

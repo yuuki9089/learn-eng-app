@@ -7,6 +7,7 @@ import { EXSentenceResponse } from "@/types/englishWord/exSentenceResponse";
 import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
 import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionEnglishWord";
 import { FavoriteRequest } from "@/types/favoriteRequest";
+import { t_question_english_word } from "@/types/db/t_question_english_word";
 
 /**
  * 英単語マスタを取得
@@ -21,6 +22,24 @@ export async function GetEnglishWord(): Promise<MEnglishWord[]> {
       "ORDER BY word_id"
     );
     return rows as MEnglishWord[];
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+/***
+ * t_question_english_wordの一覧を取得する関数
+ */
+export async function GetTQuestionEnglishWord(): Promise<t_question_english_word[]> {
+  try {
+    // [rows]でQueryResultだけを取得
+    const [rows] = await pool.query(
+      "SELECT * " +
+      "FROM t_question_english_word " +
+      "ORDER BY question_id"
+    );
+    return rows as t_question_english_word[];
   } catch (err) {
     console.error(err);
     throw err;
