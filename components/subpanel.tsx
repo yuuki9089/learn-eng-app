@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import { Box } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TextField from "@mui/material/TextField"; // プルダウン
 import Autocomplete from "@mui/material/Autocomplete"; // プルダウンの自動補完
 import { historyResponse } from "@/types/historyResponse";
 import { conditionds } from "@/types/conditions";
 import { historyRequest } from "@/types/historyRequest";
 import { PageMode } from "@/types/pageMode";
+import React from "react";
 
 type Props = {
     user_id: string;
@@ -28,7 +29,10 @@ export default function SubPanel({ user_id, page_mode }: Props) {
         { label: conditionds.INCORRECT, id: 2 },
         { label: conditionds.FAVORITE, id: 3 },
     ]
-
+    const [history, setHsitory] = useState<historyResponse[]>();
+    useEffect(() => {
+        selectedHandleChange("")
+    }, []);
 
     const selectedHandleChange = async (conditions: string) => {
         const request: historyRequest = {
@@ -36,7 +40,6 @@ export default function SubPanel({ user_id, page_mode }: Props) {
             page_mode: page_mode,
             conditions: conditions
         }
-        console.log("通った")
 
         const response = await fetch("/api/history", {
             method: "POST",
@@ -46,14 +49,15 @@ export default function SubPanel({ user_id, page_mode }: Props) {
             body: JSON.stringify(request),
         })
 
-        console.log(response);
+        const data: historyResponse[] = await response.json();
+        setHsitory(data);
 
     }
 
     return (
         <>
             {/* Right panel */}
-            <Card className="w-100">
+            <Card className="flex flex-col w-100 h-screen">
                 <CardContent className="p-6 space-y-4">
                     <div className="flex justify-center">
                         <Tabs
@@ -95,10 +99,25 @@ export default function SubPanel({ user_id, page_mode }: Props) {
 
                         />
                     </div>
-                    <HistoryItem no="No.100" text="example 1" result="ok" />
-                    <HistoryItem no="No.101" text="example 2" result="ng" />
                 </CardContent>
-            </Card>
+
+                <CardContent className="h-100 overflow-auto space-y-4">
+                    {history?.map((h) =>
+                        <React.Fragment key={h.question_id}>
+                            <HistoryItem
+                                no={h.question_id}
+                                text={h.english_word}
+                                result={h.result === 1 ? "ok"
+                                    : h.result === 2 ? "ng"
+                                        : h.result === 3 ? "skip"
+                                            : ""
+                                }
+                            />
+                        </React.Fragment>
+                    )}
+
+                </CardContent>
+            </Card >
         </>
     );
 

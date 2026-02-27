@@ -206,21 +206,24 @@ export async function GetQuestionHistory(request: historyRequest): Promise<histo
     console.log("GetQuestionHistory")
     let response: historyResponse[] = []
 
+    // word_idから英単語を取得
+    const english_all_words = await GetEnglishWord();
+
     // PageModeを基に取得するテーブルでswitch/case
     switch (request.page_mode) {
         // t_question_english_word
         case PageMode.WORDS:
-            const english_words_history: t_question_english_word[] = await GetTQuestionEnglishWord();
+            let english_words_history: t_question_english_word[] = await GetTQuestionEnglishWord();
 
             response = english_words_history.map((item) => ({
                 user_id: item.user_id,
                 question_id: item.question_id,
-                english_word: "テスト",
+                english_word: GetMEnglshWordInfo(english_all_words, item.word_id).english_word,
                 question_date: item.question_date,
                 summarization: "",
                 result: item.scoring_result,
             }));
-            // console.log(english_words_history);
+        // console.log(english_words_history);
 
         // t_question_phrase
         // case PageMode.PHRASES:
