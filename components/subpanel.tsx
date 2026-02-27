@@ -27,7 +27,8 @@ export default function SubPanel({ user_id, page_mode }: Props) {
     const options = [
         { label: conditionds.CORRECT, id: 1 },
         { label: conditionds.INCORRECT, id: 2 },
-        { label: conditionds.FAVORITE, id: 3 },
+        { label: conditionds.SKIP, id: 3 },
+        { label: conditionds.FAVORITE, id: 4 },
     ]
     const [history, setHsitory] = useState<historyResponse[]>();
     useEffect(() => {
@@ -40,7 +41,7 @@ export default function SubPanel({ user_id, page_mode }: Props) {
             page_mode: page_mode,
             conditions: conditions
         }
-
+        console.log(conditions);
         const response = await fetch("/api/history", {
             method: "POST",
             headers: {
@@ -48,8 +49,21 @@ export default function SubPanel({ user_id, page_mode }: Props) {
             },
             body: JSON.stringify(request),
         })
+        // ReactResponseをjsonへ
+        let data: historyResponse[] = await response.json();
 
-        const data: historyResponse[] = await response.json();
+        // scoring_resultが0以外のもの＝回答済み＝{正解：「1」or 不正解：「2」or スキップ：「3」}
+        data = data.filter((eh) => eh.result !== 0);
+
+        // プルダウンで選択された条件でfilter
+        data = data.filter((dt) =>
+            conditions === conditionds.CORRECT ? dt.result === 1
+                : conditions === conditionds.INCORRECT ? dt.result === 2
+                    : conditions === conditionds.SKIP ? dt.result === 3
+                        : conditions === conditionds.FAVORITE ? dt.favorite_flag === 1
+                            : dt
+        );
+
         setHsitory(data);
 
     }

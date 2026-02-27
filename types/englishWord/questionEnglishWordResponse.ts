@@ -9,7 +9,7 @@ export type QuestionEnglishWordResponse = {
     question_date: DateTime;
     audio_file_path: string;
     option: MEnglishWord[];
-    favorite_flag : boolean;
+    favorite_flag : number;
     scoring_result:number
     ex_sentence_en: string,
     ex_sentence_ja: string,

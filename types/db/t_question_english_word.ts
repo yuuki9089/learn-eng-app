@@ -9,7 +9,7 @@ export type t_question_english_word = {
     option3: number;
     option4: number;
     scoring_result: number;
-    favorite_flag: boolean;
+    favorite_flag: number;
     summarization: number;
     ex_sentence_en: number;
     ex_sentence_ja: number;

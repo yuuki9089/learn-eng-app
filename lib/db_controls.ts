@@ -35,9 +35,22 @@ export async function GetTQuestionEnglishWord(): Promise<t_question_english_word
   try {
     // [rows]でQueryResultだけを取得
     const [rows] = await pool.query(
-      "SELECT * " +
-      "FROM t_question_english_word " +
-      "ORDER BY question_id"
+      `SELECT 
+        user_id,
+        question_id,
+        word_id,
+        question_date,
+        audio_file_path,
+        option1,
+        option2,
+        option3,
+        option4,
+        scoring_result,
+        favorite_flag = 1 as favorite_flag,
+        ex_sentence_en,
+        ex_sentence_ja 
+      FROM t_question_english_word 
+      ORDER BY question_id`
     );
     return rows as t_question_english_word[];
   } catch (err) {

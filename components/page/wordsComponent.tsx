@@ -33,7 +33,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         question_date: "",
         audio_file_path: "",
         option: [],
-        favorite_flag: false,
+        favorite_flag: 0,
         scoring_result: 0,
         ex_sentence_en: "",
         ex_sentence_ja: ""
@@ -58,7 +58,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         const response = await fetch("/api/fetch/words")
         const data = await response.json() as QuestionEnglishWordResponse
         setQuestions(data);
-        setChecked(data.favorite_flag);
+        setChecked(data.favorite_flag === 1);
     }
 
     // 新規問題を作成するAPIを叩く関数
@@ -102,7 +102,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     }
 
     // DBに回答結果を登録
-    const favoriteFlagCallAPI = async (favorite_flag:boolean) => {
+    const favoriteFlagCallAPI = async (favorite_flag:number) => {
         const request: FavoriteRequest = {
             user_id: user_id,
             question_id: questions.question_id,
@@ -171,7 +171,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     // checkboxのhandle関数
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked);
-        favoriteFlagCallAPI(event.target.checked);
+        favoriteFlagCallAPI(event.target.checked ? 1 : 0);
     };
 
     return (

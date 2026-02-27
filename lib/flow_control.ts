@@ -61,7 +61,7 @@ export async function CreateEnglishWordQuestion(user_id: string): Promise<Questi
         audio_file_path: "",
         option: arr,
         scoring_result: 0,
-        favorite_flag: false,
+        favorite_flag: 0,
         ex_sentence_en: sentenceRes.ex_sentence_en,
         ex_sentence_ja: sentenceRes.ex_sentence_ja
     }
@@ -221,6 +221,7 @@ export async function GetQuestionHistory(request: historyRequest): Promise<histo
                 english_word: GetMEnglshWordInfo(english_all_words, item.word_id).english_word,
                 question_date: item.question_date,
                 summarization: "",
+                favorite_flag:item.favorite_flag,
                 result: item.scoring_result,
             }));
         // console.log(english_words_history);

@@ -6,5 +6,6 @@ export type historyResponse = {
     english_word: string;
     question_date: DateTime;
     summarization: string;
+    favorite_flag : number;
     result:number;
 }

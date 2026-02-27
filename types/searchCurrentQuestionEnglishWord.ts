@@ -13,7 +13,7 @@ export type searchCurrentQuestionEnglishWord = {
     option3: number;
     option4: number;
     scoring_result: number,
-    favorite_flag : boolean,
+    favorite_flag : number,
     ex_sentence_en: string,
     ex_sentence_ja: string,
 }
