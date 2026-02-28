@@ -20,11 +20,14 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
 import { FavoriteRequest } from "@/types/favoriteRequest";
+import { useSearchParams } from "next/navigation";
 
 export type WordsComponentProps = {
     user_id: string;
 };
 export default function WordsComponent({ user_id }: WordsComponentProps) {
+    const searchParams = useSearchParams();
+    const question_id:number = Number(searchParams.get("id") ?? "0");
 
     const [questions, setQuestions] = useState<QuestionEnglishWordResponse>({
         user_id: "",
@@ -47,7 +50,6 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     useEffect(() => {
         if (user_id === '') return;
         initializeCallAPI();
-
     }, [user_id]);
 
     // 初回実行用のAPIを叩く関数
@@ -55,7 +57,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     // ない：新規で作問
     // ある：過去の問題情報を取得
     const initializeCallAPI = async () => {
-        const response = await fetch("/api/fetch/words")
+        const response = await fetch("/api/fetch/words?id=" + question_id)
         const data = await response.json() as QuestionEnglishWordResponse
         setQuestions(data);
         setChecked(data.favorite_flag === 1);
@@ -102,7 +104,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     }
 
     // DBに回答結果を登録
-    const favoriteFlagCallAPI = async (favorite_flag:number) => {
+    const favoriteFlagCallAPI = async (favorite_flag: number) => {
         const request: FavoriteRequest = {
             user_id: user_id,
             question_id: questions.question_id,

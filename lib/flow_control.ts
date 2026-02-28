@@ -73,12 +73,15 @@ export async function CreateEnglishWordQuestion(user_id: string): Promise<Questi
 }
 
 /**
- * 過去の問題があるかを確認する関数
- * 過去にといている問題がなければ新規で問題を作成
+    過去解いた問題があるか
+    No：新規作成
+    Yes：question_idが0またはmaxを超えている
+        Yes：最大問題番号を返す
+        No：指定されたquestion_idを返す
  * @param user_id 
  * @returns 
  */
-export async function FetchQuestionEnglishWord(user_id: string): Promise<QuestionEnglishWordResponse> {
+export async function FetchQuestionEnglishWord(user_id: string, question_id: number): Promise<QuestionEnglishWordResponse> {
     // 英単語マスタの単語情報を取得
     const english_words: MEnglishWord[] = await GetEnglishWord();
 
@@ -86,11 +89,14 @@ export async function FetchQuestionEnglishWord(user_id: string): Promise<Questio
     const wordCount = english_words.length;
 
     // question_idのmax値を取得
-    const current_question_max_id: number = await GetMaxQuestionID(user_id);
+    let current_question_max_id: number = await GetMaxQuestionID(user_id);
 
     // 過去の問題がある
     if (current_question_max_id != null) {
-        // t_quesiton_english_wordのMax値の内容を取得してquestionsにはめる
+        
+
+        if(question_id !== 0 && question_id <= current_question_max_id)
+            current_question_max_id = question_id;
 
         // t_question_max_idを基にレスポンスに必要な情報をDBから取得
         const maxQuestionInfo: searchCurrentQuestionEnglishWord = await GetCurrentQuestionEnglishWord(user_id, current_question_max_id)
@@ -221,7 +227,7 @@ export async function GetQuestionHistory(request: historyRequest): Promise<histo
                 english_word: GetMEnglshWordInfo(english_all_words, item.word_id).english_word,
                 question_date: item.question_date,
                 summarization: "",
-                favorite_flag:item.favorite_flag,
+                favorite_flag: item.favorite_flag,
                 result: item.scoring_result,
             }));
         // console.log(english_words_history);
