@@ -29,6 +29,7 @@ export default function SubPanel({ user_id, page_mode }: Props) {
         { label: conditionds.INCORRECT, id: 2 },
         { label: conditionds.SKIP, id: 3 },
         { label: conditionds.FAVORITE, id: 4 },
+        { label: conditionds.ALL, id: 5 },
     ]
     const [history, setHsitory] = useState<historyResponse[]>();
     useEffect(() => {
@@ -61,7 +62,8 @@ export default function SubPanel({ user_id, page_mode }: Props) {
                 : conditions === conditionds.INCORRECT ? dt.result === 2
                     : conditions === conditionds.SKIP ? dt.result === 3
                         : conditions === conditionds.FAVORITE ? dt.favorite_flag === 1
-                            : dt
+                            : conditions === conditionds.ALL ? dt
+                                : dt
         );
 
         setHsitory(data);
