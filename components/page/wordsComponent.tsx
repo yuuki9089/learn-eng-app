@@ -7,28 +7,46 @@ import { Button } from "@/components/ui/button";
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
 import CheckBox from '@mui/material/Checkbox';
 import { useEffect, useState } from "react";
-import { isCorrect, QuestionEnglishWordResponse } from "@/types/questionEnglishWordResponse";
-import { MEnglishWord } from "@/types/server/englishWord";
+import { isCorrect, QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
+import { MEnglishWord } from "@/types/db/englishWord";
 import { useRef } from "react";
 import { Confetti } from "../ui/confetti";
 import confetti from "canvas-confetti";
-import { EXSentenceRequest } from "@/types/exSentenceRequest";
-import { EXSentenceResponse } from "@/types/exSentenceResponse";
+import { EXSentenceRequest } from "@/types/englishWord/exSentenceRequest";
+import { EXSentenceResponse } from "@/types/englishWord/exSentenceResponse";
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
+import { FavoriteRequest } from "@/types/favoriteRequest";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export type WordsComponentProps = {
     user_id: string;
 };
 export default function WordsComponent({ user_id }: WordsComponentProps) {
+    const router = useRouter()
+    const searchParams = useSearchParams();
+    const question_id: number = Number(searchParams.get("id") ?? "0");
 
-    const [questions, setQuestions] = useState<QuestionEnglishWordResponse>();
+    const [questions, setQuestions] = useState<QuestionEnglishWordResponse>({
+        user_id: "",
+        question_id: 0,
+        word_id: 0,
+        question_date: "",
+        audio_file_path: "",
+        option: [],
+        favorite_flag: 0,
+        scoring_result: 0,
+        ex_sentence_en: "",
+        ex_sentence_ja: ""
+    });
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);
     const [exSentence, setExSentence] = useState<EXSentenceResponse>();
-
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [checked, setChecked] = useState(false);
 
     useEffect(() => {
         if (user_id === '') return;
@@ -36,48 +54,108 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     }, [user_id]);
 
     // 初回実行用のAPIを叩く関数
+    // 過去に解いた問題があるかを確認
+    // ない：新規で作問
+    // ある：過去の問題情報を取得
     const initializeCallAPI = async () => {
-        // 既存の問題がある場合：取得
-        // ない場合：新規で問題を作成
-        const response = await fetch("/api/questions/words")
+        const response = await fetch("/api/fetch/words?id=" + question_id)
         const data = await response.json() as QuestionEnglishWordResponse
         setQuestions(data);
+        setChecked(data.favorite_flag === 1);
 
-        const body: EXSentenceRequest = {
-            user_id: user_id,
-            question_id: data.question_id,
-            word_id: data.word_id
+        // 過去問題の回答を見る場合
+        if (data.scoring_result !== 0) {
+            setIsSubmitting(false);
+            setIsVisible(true);
         }
-        await fetch("/api/ex_sentence/words", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(body),
-        })
-            .then(res => res.json())
-            .then(data => setExSentence(data))
+    }
+
+    // 新規問題を作成するAPIを叩く関数
+    const nextProblemCallAPI = async () => {
+        console.log(`確認用：${questions.question_id + 1}`)
+        // リダイレクトしていない？
+        router.push(`/words?id=${questions.question_id + 1}`)
+
+        // 
+        const res = await fetch(`/api/fetch/words?id=${questions.question_id + 1}`)
+        const data = await res.json() as QuestionEnglishWordResponse
+        setQuestions(data);
+
+        // 新規問題をバックグラウンド実行
+        const response = await fetch(`/api/questions/words?id=${questions.question_id + 1}`)
+        // const data = await response.json() as QuestionEnglishWordResponse
+        // setQuestions(data);
     }
 
     // 選択肢を押下した際の処理
-    const handleClick = (questions: QuestionEnglishWordResponse, q: MEnglishWord) => {
+    const handleClick = async (questions: QuestionEnglishWordResponse, q: MEnglishWord) => {
+        let scoringResult: number = 0;
         if (!isCorrect(questions, q)) {
             alert("不正解...");
             setIsCorrectAns(false);
+            scoringResult = 2; // 不正解
         }
         else {
-            // alert("正解!!");
             showFireWorksConfetti();
             setIsCorrectAns(true);
+            scoringResult = 1; // 正解
         }
         setIsVisible(true);
+        setIsSubmitting(true);
+
+        registerAnsResultEnglishWord(questions, scoringResult)
     }
 
     // Nextボタン押下時の関数
     const nextHandleClick = () => {
         setIsVisible(false);
-        initializeCallAPI();
+        setIsSubmitting(false);
+        nextProblemCallAPI();
     }
+
+    // スキップボタン押下時の関数
+    const skipHandleClick = () => {
+        const scoringResult = 3; // スキップ
+        registerAnsResultEnglishWord(questions, scoringResult)
+        nextProblemCallAPI(); // 次の問題へ
+    }
+
+    // DBに回答結果を登録
+    const favoriteFlagCallAPI = async (favorite_flag: number) => {
+        const request: FavoriteRequest = {
+            user_id: user_id,
+            question_id: questions.question_id,
+            favorite_flag: favorite_flag,
+            page_mode: PageMode.WORDS
+        }
+
+        await fetch("/api/favorite_flag", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+        })
+    }
+
+    // DBに回答結果を登録
+    const registerAnsResultEnglishWord = async (questions: QuestionEnglishWordResponse, scoringResult: number) => {
+
+        const request: RegisterAnsResultEnglishWordRequest = {
+            user_id: user_id,
+            question_id: questions.question_id,
+            scoring_result: scoringResult
+        }
+
+        await fetch("/api/question_ans/words", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+        })
+    }
+
 
     // Confetti関数
     const showFireWorksConfetti = () => {
@@ -109,6 +187,12 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         }, 250)
     }
 
+    // checkboxのhandle関数
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setChecked(event.target.checked);
+        favoriteFlagCallAPI(event.target.checked ? 1 : 0);
+    };
+
     return (
         <>
             {/* Main */}
@@ -137,7 +221,11 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                 }</p>
                                 <div className="mt-auto pt-6 flex gap-3 items-center">
                                     <Volume2 size={22} className="cursor-pointer" />
-                                    <CheckBox color='success' />
+                                    <CheckBox
+                                        color='success'
+                                        checked={checked}
+                                        onChange={handleChange}
+                                    />
                                     {/* <Check className="text-green-500" /> */}
                                 </div>
                             </div>
@@ -156,6 +244,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                             <button
                                                 onClick={() => handleClick(questions, q)}
                                                 className="w-full h-full p-10 flex items-center justify-center rounded-2xl hover:bg-slate-800 inline break-words whitespace-normal"
+                                                disabled={isSubmitting || questions.scoring_result !== 0}
                                             >
                                                 <p className="text-xl text-slate-300 text-center break-words ">
                                                     {q.meaning1}
@@ -189,10 +278,10 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                             } >
                                             <AccordionSummary
                                                 expandIcon={<ArrowDropDownIcon />}>
-                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_en}</p>
+                                                <p className="text-lm mt-1">{questions.ex_sentence_en}</p>
                                             </AccordionSummary>
                                             <AccordionDetails>
-                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_ja}</p>
+                                                <p className="text-lm mt-1">{questions.ex_sentence_ja}</p>
                                             </AccordionDetails>
                                         </Accordion>
                                     </div>
@@ -222,10 +311,10 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                             } >
                                             <AccordionSummary
                                                 expandIcon={<ArrowDropDownIcon />}>
-                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_en}</p>
+                                                <p className="text-lm mt-1">{questions.ex_sentence_en}</p>
                                             </AccordionSummary>
                                             <AccordionDetails>
-                                                <p className="text-lm mt-1">{exSentence?.ex_sentence_ja}</p>
+                                                <p className="text-lm mt-1">{questions.ex_sentence_ja}</p>
                                             </AccordionDetails>
                                         </Accordion>
                                     </div>
@@ -236,8 +325,19 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
 
                         <CardContent className="space-y-6">
                             <div className="mt-auto flex justify-between">
-                                <Button variant="destructive">スキップ</Button>
-                                <Button onClick={() => nextHandleClick()}>Next</Button>
+                                {/* <a href={`/words?id=${questions.question_id + 1}`}> */}
+                                <Button variant="destructive"
+                                    onClick={() => skipHandleClick()}
+                                    disabled={isSubmitting || questions.scoring_result !== 0}
+                                >スキップ</Button>
+                                {/* </a> */}
+
+                                {/* <a href={`/words?id=${questions.question_id + 1}`}> */}
+                                <Button
+                                    onClick={() => nextHandleClick()}
+                                    disabled={!isSubmitting}
+                                >Next</Button>
+                                {/* </a> */}
                             </div>
                         </CardContent>
                     </div>

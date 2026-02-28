@@ -1,5 +1,5 @@
 
-import { EXSentenceRequest } from "@/types/exSentenceRequest";
+import { EXSentenceRequest } from "@/types/englishWord/exSentenceRequest";
 import { NextRequest, NextResponse } from "next/server";
 import { GenEXSentence } from "@/lib/flow_control";
 

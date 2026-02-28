@@ -1,5 +1,5 @@
 import { DateTime } from "next-auth/providers/kakao";
-import { MEnglishWord } from "./server/englishWord";
+import { MEnglishWord } from "../db/englishWord";
 import { m } from "motion/react";
 
 export type QuestionEnglishWordResponse = {
@@ -9,6 +9,10 @@ export type QuestionEnglishWordResponse = {
     question_date: DateTime;
     audio_file_path: string;
     option: MEnglishWord[];
+    favorite_flag : number;
+    scoring_result:number
+    ex_sentence_en: string,
+    ex_sentence_ja: string,
 }
 
 /// 正誤判定する関数

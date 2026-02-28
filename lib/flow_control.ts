@@ -1,22 +1,29 @@
-import { QuestionEnglishWordResponse } from "@/types/questionEnglishWordResponse";
-import { GetEnglishWord } from "./db_controls";
+import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
+import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetTQuestionEnglishWord, } from "./db_controls";
+import { InsertQuestionEnglishWord } from "./db_controls";
 import { number } from "motion";
-import { MEnglishWord } from "@/types/server/englishWord";
-import { EXSentenceRequest } from "@/types/exSentenceRequest";
+import { MEnglishWord } from "@/types/db/englishWord";
+import { EXSentenceRequest } from "@/types/englishWord/exSentenceRequest";
 import { generateInferenceWithOllama } from "./ollama_ai";
 import { Chonburi } from "next/font/google";
-import { EXSentenceResponse } from "@/types/exSentenceResponse";
+import { EXSentenceResponse } from "@/types/englishWord/exSentenceResponse";
 import { OllamaApiPayload } from "@/types/ai/ollama_api_payload";
 import { OllamaApiResponse } from "@/types/ai/ollama_api_response";
 import { ExSentence } from "@/types/ai/ex_sentence";
+import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionEnglishWord";
+import { DateTime } from "next-auth/providers/kakao";
+import { historyRequest } from "@/types/historyRequest";
+import { PageMode } from "@/types/pageMode";
+import { t_question_english_word } from "@/types/db/t_question_english_word";
+import { historyResponse } from "@/types/historyResponse";
 
 /**
  * 英単語の4択を作問する関数
  * @param user_id 
  */
-export async function CreateEnglsihWordQuestion(user_id: string): Promise<QuestionEnglishWordResponse> {
+export async function CreateEnglishWordQuestion(user_id: string): Promise<QuestionEnglishWordResponse> {
     // 英単語マスタの単語情報を取得
-    const english_words = await GetEnglishWord();
+    const english_words: MEnglishWord[] = await GetEnglishWord();
 
     // m_english_wordsの数を取得
     const wordCount = english_words.length;
@@ -33,23 +40,104 @@ export async function CreateEnglsihWordQuestion(user_id: string): Promise<Questi
     const arr: MEnglishWord[] = Array.from(set) as MEnglishWord[]
     const correctWord: MEnglishWord = arr[index]
 
-    // 出題日を作成
-    const genQuestionDate = new Date().toLocaleDateString("ja-JP", {
-        year: "numeric", month: "2-digit",
-        day: "2-digit"
-    })
+
+    const sentenceReq: EXSentenceRequest = {
+        user_id: user_id,
+        // question_id: current_question_max_id + 1,
+        word_id: correctWord.word_id
+    }
+    // 例文の登録
+    const sentenceRes = await GenEXSentence(sentenceReq);
+
+    // question_idのmax値を取得
+    const current_question_max_id: number = await GetMaxQuestionID(user_id);
 
     // 戻り値はフロントに返すJSON
     const response: QuestionEnglishWordResponse = {
         user_id: user_id,
-        question_id: 1,
+        question_id: current_question_max_id + 1,
         word_id: correctWord.word_id,
-        question_date: genQuestionDate,
+        question_date: ProcessQuestionDate(new Date()),
         audio_file_path: "",
-        option: arr
+        option: arr,
+        scoring_result: 0,
+        favorite_flag: 0,
+        ex_sentence_en: sentenceRes.ex_sentence_en,
+        ex_sentence_ja: sentenceRes.ex_sentence_ja
     }
+
+    //DB(英単語出題テーブル)に登録
+    await InsertQuestionEnglishWord(response)
+
     return response;
 }
+
+/**
+    過去解いた問題があるか
+    No：新規作成
+    Yes：question_idが0またはmaxを超えている
+        Yes：最大問題番号を返す
+        No：指定されたquestion_idを返す
+ * @param user_id 
+ * @returns 
+ */
+export async function FetchQuestionEnglishWord(user_id: string, question_id: number): Promise<QuestionEnglishWordResponse> {
+    // 英単語マスタの単語情報を取得
+    const english_words: MEnglishWord[] = await GetEnglishWord();
+
+    // m_english_wordsの数を取得
+    const wordCount = english_words.length;
+
+    // question_idのmax値を取得
+    let current_question_max_id: number = await GetMaxQuestionID(user_id);
+
+    // 過去の問題がある
+    if (current_question_max_id != null) {
+
+
+        if (question_id !== 0 && question_id <= current_question_max_id)
+            current_question_max_id = question_id;
+
+        // t_question_max_idを基にレスポンスに必要な情報をDBから取得
+        const maxQuestionInfo: searchCurrentQuestionEnglishWord = await GetCurrentQuestionEnglishWord(user_id, current_question_max_id)
+
+        // optionのword_idを基にMEglishWordを取得
+        const options: MEnglishWord[] = [];
+        options.push(GetMEnglshWordInfo(english_words, maxQuestionInfo.option1));
+        options.push(GetMEnglshWordInfo(english_words, maxQuestionInfo.option2));
+        options.push(GetMEnglshWordInfo(english_words, maxQuestionInfo.option3));
+        options.push(GetMEnglshWordInfo(english_words, maxQuestionInfo.option4));
+
+
+        // response用にJSONにマッピング
+        const response: QuestionEnglishWordResponse = {
+            user_id: maxQuestionInfo.user_id,
+            question_id: maxQuestionInfo.question_id,
+            word_id: maxQuestionInfo.word_id,
+            question_date: ProcessQuestionDate(new Date(maxQuestionInfo.question_date)),
+            audio_file_path: maxQuestionInfo.audio_file_path,
+            option: options,
+            favorite_flag: maxQuestionInfo.favorite_flag,
+            scoring_result: maxQuestionInfo.scoring_result,
+            ex_sentence_en: maxQuestionInfo.ex_sentence_en,
+            ex_sentence_ja: maxQuestionInfo.ex_sentence_ja
+        }
+        return response;
+    }
+
+    const cewq: QuestionEnglishWordResponse[] = []
+    // 初回実行のみ10問作成
+    for (let i = 0; i < 10; i++) {
+        cewq.push(await CreateEnglishWordQuestion(user_id));
+        // console.log(`通った${i}回目`);
+    }
+
+    // cewq.map((m) => {console.log(m.question_id)})
+
+    // 1つ目のみ返却
+    return cewq[0];
+}
+
 
 // 渡された配列の要素の順番をシャッフルします．
 function arrayShuffle(array: QuestionEnglishWordResponse[]) {
@@ -69,7 +157,7 @@ function arrayShuffle(array: QuestionEnglishWordResponse[]) {
  * 例文の日本語と英語を作成して
  * フロントとDBに登録する関数
  */
-export async function GenEXSentence(data: EXSentenceRequest) {
+export async function GenEXSentence(data: EXSentenceRequest): Promise<EXSentenceResponse> {
     // word_idから英単語を取得
     const english_all_words = await GetEnglishWord();
     // word_idが一致した単語をMEnglishWord型で返却
@@ -102,13 +190,67 @@ export async function GenEXSentence(data: EXSentenceRequest) {
     // 戻り値用にJSONを生成
     const response: EXSentenceResponse = {
         user_id: data.user_id,
-        question_id: data.question_id,
+        // question_id: data.question_id,
         word_id: data.word_id,
         ex_sentence_en: ex_sentence_obj.ex_sentence_en,
         ex_sentence_ja: ex_sentence_obj.ex_sentence_ja
     }
 
-    // DBに登録
+    // // DBに登録
+    // RegesterEXSentenceEnglishWord(response)
+
     // フロントへ返す
+    return response;
+}
+
+function GetMEnglshWordInfo(english_words: MEnglishWord[], word_id: number): MEnglishWord {
+    // 英単語マスタ情報からword_idが一致している単語を取得
+    return english_words.filter((w) => w.word_id === word_id)[0]
+}
+
+function ProcessQuestionDate(date: Date) {
+    return date.toLocaleDateString("ja-JP", {
+        year: "numeric", month: "2-digit",
+        day: "2-digit"
+    })
+}
+
+/**
+ * 
+ */
+export async function GetQuestionHistory(request: historyRequest): Promise<historyResponse[]> {
+    console.log("GetQuestionHistory")
+    let response: historyResponse[] = []
+
+    // word_idから英単語を取得
+    const english_all_words = await GetEnglishWord();
+
+    // PageModeを基に取得するテーブルでswitch/case
+    switch (request.page_mode) {
+        // t_question_english_word
+        case PageMode.WORDS:
+            let english_words_history: t_question_english_word[] = await GetTQuestionEnglishWord(request.user_id);
+
+            response = english_words_history.map((item) => ({
+                user_id: item.user_id,
+                question_id: item.question_id,
+                english_word: GetMEnglshWordInfo(english_all_words, item.word_id).english_word,
+                question_date: item.question_date,
+                summarization: "",
+                favorite_flag: item.favorite_flag,
+                result: item.scoring_result,
+            }));
+        // console.log(english_words_history);
+
+        // t_question_phrase
+        // case PageMode.PHRASES:
+        //     targetTable = "t_question_phrase";
+        //     break;
+
+        // t_question_sentence
+        // case PageMode.SHORT_TEXTS:
+        //     targetTable = "t_question_sentence";
+        //     break;
+    }
     return response;
 }
