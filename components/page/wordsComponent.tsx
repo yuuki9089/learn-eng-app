@@ -61,6 +61,13 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         const data = await response.json() as QuestionEnglishWordResponse
         setQuestions(data);
         setChecked(data.favorite_flag === 1);
+        
+        // 過去問題の回答を見る場合
+        if(data.scoring_result !== 0)
+        {
+            setIsSubmitting(false);
+            setIsVisible(true);
+        }
     }
 
     // 新規問題を作成するAPIを叩く関数
@@ -227,7 +234,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                                             <button
                                                 onClick={() => handleClick(questions, q)}
                                                 className="w-full h-full p-10 flex items-center justify-center rounded-2xl hover:bg-slate-800 inline break-words whitespace-normal"
-                                                disabled={isSubmitting}
+                                                disabled={isSubmitting || questions.scoring_result !== 0}
                                             >
                                                 <p className="text-xl text-slate-300 text-center break-words ">
                                                     {q.meaning1}
@@ -310,7 +317,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                             <div className="mt-auto flex justify-between">
                                 <Button variant="destructive"
                                     onClick={() => skipHandleClick()}
-                                    disabled={isSubmitting}
+                                    disabled={isSubmitting || questions.scoring_result !== 0}
                                 >スキップ</Button>
                                 <Button
                                     onClick={() => nextHandleClick()}
