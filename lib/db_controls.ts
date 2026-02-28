@@ -31,7 +31,7 @@ export async function GetEnglishWord(): Promise<MEnglishWord[]> {
 /***
  * t_question_english_wordの一覧を取得する関数
  */
-export async function GetTQuestionEnglishWord(): Promise<t_question_english_word[]> {
+export async function GetTQuestionEnglishWord(user_id: string): Promise<t_question_english_word[]> {
   try {
     // [rows]でQueryResultだけを取得
     const [rows] = await pool.query(
@@ -50,7 +50,11 @@ export async function GetTQuestionEnglishWord(): Promise<t_question_english_word
         ex_sentence_en,
         ex_sentence_ja 
       FROM t_question_english_word 
-      ORDER BY question_id`
+      WHERE user_id = ? 
+      ORDER BY question_id`,
+      [
+        user_id
+      ]
     );
     return rows as t_question_english_word[];
   } catch (err) {
