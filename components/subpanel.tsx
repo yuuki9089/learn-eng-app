@@ -61,7 +61,7 @@ export default function SubPanel({ user_id, page_mode }: Props) {
         let data: historyResponse[] = await response.json();
 
         // scoring_resultが0以外のもの＝回答済み＝{正解：「1」or 不正解：「2」or スキップ：「3」}
-        data = data.filter((eh) => eh.result !== 0);
+        // data = data.filter((eh) => eh.result !== 0);
 
         // プルダウンで選択された条件でfilter
         data = data.filter((dt) =>

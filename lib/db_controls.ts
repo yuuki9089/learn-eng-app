@@ -35,24 +35,50 @@ export async function GetTQuestionEnglishWord(user_id: string): Promise<t_questi
   try {
     // [rows]でQueryResultだけを取得
     const [rows] = await pool.query(
-      `SELECT 
-        user_id,
-        question_id,
-        word_id,
-        question_date,
-        audio_file_path,
-        option1,
-        option2,
-        option3,
-        option4,
-        scoring_result,
-        favorite_flag = 1 as favorite_flag,
-        ex_sentence_en,
-        ex_sentence_ja 
-      FROM t_question_english_word 
-      WHERE user_id = ? 
-      ORDER BY question_id`,
+    `(SELECT
+      user_id,
+      question_id,
+      word_id,
+      question_date,
+      audio_file_path,
+      option1,
+      option2,
+      option3,
+      option4,
+      scoring_result,
+      favorite_flag = 1 as favorite_flag,
+      ex_sentence_en,
+      ex_sentence_ja
+    FROM
+      t_question_english_word
+    WHERE
+      user_id = ? AND scoring_result <> 0
+    ORDER BY
+      question_id)
+    UNION 
+    (SELECT
+      user_id,
+      question_id,
+      word_id,
+      question_date,
+      audio_file_path,
+      option1,
+      option2,
+      option3,
+      option4,
+      scoring_result,
+      favorite_flag = 1 as favorite_flag,
+      ex_sentence_en,
+      ex_sentence_ja
+    FROM
+      t_question_english_word
+    WHERE
+      user_id = ? AND scoring_result = 0
+    ORDER BY
+      question_id
+      LIMIT 1)`,
       [
+        user_id,
         user_id
       ]
     );
@@ -147,32 +173,32 @@ export async function InsertQuestionEnglishWord(request: QuestionEnglishWordResp
  * @param request 
  * @returns 
  */
-export async function RegesterEXSentenceEnglishWord(request: EXSentenceResponse) {
-  try {
-    const [result]: any = await pool.execute(
-      `UPDATE t_question_english_word tqew
-      SET tqew.ex_sentence_en = ?, tqew.ex_sentence_ja = ?
-      WHERE tqew.user_id = ? AND tqew.question_id = ?`,
-      [
-        request.ex_sentence_en,
-        request.ex_sentence_ja,
-        request.user_id,
-        request.question_id
-      ]
-    );
-    console.log("DB_inserted");
-    return NextResponse.json({
-      success: true,
-    });
-  }
-  catch (error) {
-    console.error("INSERT ERROR:", error);
-    return NextResponse.json(
-      { error: "DB Insert Failed" },
-      { status: 500 }
-    );
-  }
-}
+// export async function RegesterEXSentenceEnglishWord(request: EXSentenceResponse) {
+//   try {
+//     const [result]: any = await pool.execute(
+//       `UPDATE t_question_english_word tqew
+//       SET tqew.ex_sentence_en = ?, tqew.ex_sentence_ja = ?
+//       WHERE tqew.user_id = ? AND tqew.question_id = ?`,
+//       [
+//         request.ex_sentence_en,
+//         request.ex_sentence_ja,
+//         request.user_id,
+//         request.question_id
+//       ]
+//     );
+//     console.log("DB_inserted");
+//     return NextResponse.json({
+//       success: true,
+//     });
+//   }
+//   catch (error) {
+//     console.error("INSERT ERROR:", error);
+//     return NextResponse.json(
+//       { error: "DB Insert Failed" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 /**
  * DBに英単語の回答結果を登録する関数

@@ -1,5 +1,5 @@
 import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
-import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetTQuestionEnglishWord, RegesterEXSentenceEnglishWord } from "./db_controls";
+import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetTQuestionEnglishWord, } from "./db_controls";
 import { InsertQuestionEnglishWord } from "./db_controls";
 import { number } from "motion";
 import { MEnglishWord } from "@/types/db/englishWord";
@@ -28,9 +28,6 @@ export async function CreateEnglishWordQuestion(user_id: string): Promise<Questi
     // m_english_wordsの数を取得
     const wordCount = english_words.length;
 
-    // question_idのmax値を取得
-    const current_question_max_id: number = await GetMaxQuestionID(user_id);
-
     // 1から英単語数で4個重複無しで乱数を弾く
     const set = new Set(); // 一意の数字しか許容しない
     while (set.size < 4) {
@@ -46,11 +43,14 @@ export async function CreateEnglishWordQuestion(user_id: string): Promise<Questi
 
     const sentenceReq: EXSentenceRequest = {
         user_id: user_id,
-        question_id: current_question_max_id + 1,
+        // question_id: current_question_max_id + 1,
         word_id: correctWord.word_id
     }
     // 例文の登録
     const sentenceRes = await GenEXSentence(sentenceReq);
+
+    // question_idのmax値を取得
+    const current_question_max_id: number = await GetMaxQuestionID(user_id);
 
     // 戻り値はフロントに返すJSON
     const response: QuestionEnglishWordResponse = {
@@ -67,7 +67,7 @@ export async function CreateEnglishWordQuestion(user_id: string): Promise<Questi
     }
 
     //DB(英単語出題テーブル)に登録
-    InsertQuestionEnglishWord(response)
+    await InsertQuestionEnglishWord(response)
 
     return response;
 }
@@ -93,9 +93,9 @@ export async function FetchQuestionEnglishWord(user_id: string, question_id: num
 
     // 過去の問題がある
     if (current_question_max_id != null) {
-        
 
-        if(question_id !== 0 && question_id <= current_question_max_id)
+
+        if (question_id !== 0 && question_id <= current_question_max_id)
             current_question_max_id = question_id;
 
         // t_question_max_idを基にレスポンスに必要な情報をDBから取得
@@ -125,7 +125,17 @@ export async function FetchQuestionEnglishWord(user_id: string, question_id: num
         return response;
     }
 
-    return CreateEnglishWordQuestion(user_id)
+    const cewq: QuestionEnglishWordResponse[] = []
+    // 初回実行のみ10問作成
+    for (let i = 0; i < 10; i++) {
+        cewq.push(await CreateEnglishWordQuestion(user_id));
+        // console.log(`通った${i}回目`);
+    }
+
+    // cewq.map((m) => {console.log(m.question_id)})
+
+    // 1つ目のみ返却
+    return cewq[0];
 }
 
 
@@ -180,7 +190,7 @@ export async function GenEXSentence(data: EXSentenceRequest): Promise<EXSentence
     // 戻り値用にJSONを生成
     const response: EXSentenceResponse = {
         user_id: data.user_id,
-        question_id: data.question_id,
+        // question_id: data.question_id,
         word_id: data.word_id,
         ex_sentence_en: ex_sentence_obj.ex_sentence_en,
         ex_sentence_ja: ex_sentence_obj.ex_sentence_ja
@@ -219,7 +229,7 @@ export async function GetQuestionHistory(request: historyRequest): Promise<histo
     switch (request.page_mode) {
         // t_question_english_word
         case PageMode.WORDS:
-            let english_words_history: t_question_english_word[] = await GetTQuestionEnglishWord();
+            let english_words_history: t_question_english_word[] = await GetTQuestionEnglishWord(request.user_id);
 
             response = english_words_history.map((item) => ({
                 user_id: item.user_id,

@@ -72,10 +72,19 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
 
     // 新規問題を作成するAPIを叩く関数
     const nextProblemCallAPI = async () => {
-        const response = await fetch(`/api/questions/words?id=${questions.question_id + 1}`)
+        console.log(`確認用：${questions.question_id + 1}`)
+        // リダイレクトしていない？
         router.push(`/words?id=${questions.question_id + 1}`)
-        const data = await response.json() as QuestionEnglishWordResponse
+
+        // 
+        const res = await fetch(`/api/fetch/words?id=${questions.question_id + 1}`)
+        const data = await res.json() as QuestionEnglishWordResponse
         setQuestions(data);
+
+        // 新規問題をバックグラウンド実行
+        const response = await fetch(`/api/questions/words?id=${questions.question_id + 1}`)
+        // const data = await response.json() as QuestionEnglishWordResponse
+        // setQuestions(data);
     }
 
     // 選択肢を押下した際の処理
@@ -317,17 +326,17 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
                         <CardContent className="space-y-6">
                             <div className="mt-auto flex justify-between">
                                 {/* <a href={`/words?id=${questions.question_id + 1}`}> */}
-                                    <Button variant="destructive"
-                                        onClick={() => skipHandleClick()}
-                                        disabled={isSubmitting || questions.scoring_result !== 0}
-                                    >スキップ</Button>
+                                <Button variant="destructive"
+                                    onClick={() => skipHandleClick()}
+                                    disabled={isSubmitting || questions.scoring_result !== 0}
+                                >スキップ</Button>
                                 {/* </a> */}
 
                                 {/* <a href={`/words?id=${questions.question_id + 1}`}> */}
-                                    <Button
-                                        onClick={() => nextHandleClick()}
-                                        disabled={!isSubmitting}
-                                    >Next</Button>
+                                <Button
+                                    onClick={() => nextHandleClick()}
+                                    disabled={!isSubmitting}
+                                >Next</Button>
                                 {/* </a> */}
                             </div>
                         </CardContent>
