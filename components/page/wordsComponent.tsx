@@ -20,14 +20,15 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
 import { FavoriteRequest } from "@/types/favoriteRequest";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export type WordsComponentProps = {
     user_id: string;
 };
 export default function WordsComponent({ user_id }: WordsComponentProps) {
+    const router = useRouter()
     const searchParams = useSearchParams();
-    const question_id:number = Number(searchParams.get("id") ?? "0");
+    const question_id: number = Number(searchParams.get("id") ?? "0");
 
     const [questions, setQuestions] = useState<QuestionEnglishWordResponse>({
         user_id: "",
@@ -61,10 +62,9 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         const data = await response.json() as QuestionEnglishWordResponse
         setQuestions(data);
         setChecked(data.favorite_flag === 1);
-        
+
         // 過去問題の回答を見る場合
-        if(data.scoring_result !== 0)
-        {
+        if (data.scoring_result !== 0) {
             setIsSubmitting(false);
             setIsVisible(true);
         }
@@ -72,7 +72,8 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
 
     // 新規問題を作成するAPIを叩く関数
     const nextProblemCallAPI = async () => {
-        const response = await fetch("/api/questions/words")
+        const response = await fetch(`/api/questions/words?id=${questions.question_id + 1}`)
+        router.push(`/words?id=${questions.question_id + 1}`)
         const data = await response.json() as QuestionEnglishWordResponse
         setQuestions(data);
     }
@@ -315,14 +316,19 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
 
                         <CardContent className="space-y-6">
                             <div className="mt-auto flex justify-between">
-                                <Button variant="destructive"
-                                    onClick={() => skipHandleClick()}
-                                    disabled={isSubmitting || questions.scoring_result !== 0}
-                                >スキップ</Button>
-                                <Button
-                                    onClick={() => nextHandleClick()}
-                                    disabled={!isSubmitting}
-                                >Next</Button>
+                                {/* <a href={`/words?id=${questions.question_id + 1}`}> */}
+                                    <Button variant="destructive"
+                                        onClick={() => skipHandleClick()}
+                                        disabled={isSubmitting || questions.scoring_result !== 0}
+                                    >スキップ</Button>
+                                {/* </a> */}
+
+                                {/* <a href={`/words?id=${questions.question_id + 1}`}> */}
+                                    <Button
+                                        onClick={() => nextHandleClick()}
+                                        disabled={!isSubmitting}
+                                    >Next</Button>
+                                {/* </a> */}
                             </div>
                         </CardContent>
                     </div>

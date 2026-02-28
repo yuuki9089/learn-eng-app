@@ -14,6 +14,7 @@ import { historyRequest } from "@/types/historyRequest";
 import { PageMode } from "@/types/pageMode";
 import React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 
 type Props = {
@@ -26,6 +27,9 @@ export default function SubPanel({ user_id, page_mode }: Props) {
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
         setSelectedTab(newValue);
     };
+    const searchParams = useSearchParams();
+    const question_id = searchParams.get("id") ?? "0";
+
     const options = [
         { label: conditionds.CORRECT, id: 1 },
         { label: conditionds.INCORRECT, id: 2 },
@@ -37,7 +41,7 @@ export default function SubPanel({ user_id, page_mode }: Props) {
     const [history, setHsitory] = useState<historyResponse[]>();
     useEffect(() => {
         selectedHandleChange("")
-    }, []);
+    }, [question_id]);
 
     const selectedHandleChange = async (conditions: string) => {
         const request: historyRequest = {
