@@ -13,6 +13,8 @@ import { conditionds } from "@/types/conditions";
 import { historyRequest } from "@/types/historyRequest";
 import { PageMode } from "@/types/pageMode";
 import React from "react";
+import Link from "next/link";
+
 
 type Props = {
     user_id: string;
@@ -31,6 +33,7 @@ export default function SubPanel({ user_id, page_mode }: Props) {
         { label: conditionds.FAVORITE, id: 4 },
         { label: conditionds.ALL, id: 5 },
     ]
+
     const [history, setHsitory] = useState<historyResponse[]>();
     useEffect(() => {
         selectedHandleChange("")
@@ -120,16 +123,21 @@ export default function SubPanel({ user_id, page_mode }: Props) {
                 <CardContent className="h-100 overflow-auto space-y-4">
                     {history?.map((h) =>
                         <React.Fragment key={h.question_id}>
-                            <HistoryItem
-                                no={h.question_id}
-                                text={h.english_word}
-                                result={h.result === 1 ? "ok"
-                                    : h.result === 2 ? "ng"
-                                        : h.result === 3 ? "skip"
-                                            : ""
-                                }
-                            />
+                            <div>
+                                <a href={`/words?id=${h.question_id}`}>
+                                    <HistoryItem
+                                        no={h.question_id}
+                                        text={h.english_word}
+                                        result={h.result === 1 ? "ok"
+                                            : h.result === 2 ? "ng"
+                                                : h.result === 3 ? "skip"
+                                                    : ""
+                                        }
+                                    />
+                                </a>
+                            </div>
                         </React.Fragment>
+
                     )}
 
                 </CardContent>
