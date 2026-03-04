@@ -99,7 +99,8 @@ export async function FetchQuestionEnglishWord(user_id: string, question_id: num
             current_question_max_id = question_id;
 
         // /api/wordsのとき(クエリ指定がないとき)
-        if (question_id === 0){
+        // /api/words?<範囲外指定>のとき
+        if (question_id === 0 || current_question_max_id < question_id){
             let unanswerd_question_id = await GetUNAnswerdQuestionID(user_id);
             console.log(`unanswerd_question_id:${unanswerd_question_id}`);
             current_question_max_id = unanswerd_question_id;
