@@ -1,5 +1,5 @@
 import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
-import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetTQuestionEnglishWord, } from "./db_controls";
+import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetTQuestionEnglishWord, GetUNAnswerdQuestionID, } from "./db_controls";
 import { InsertQuestionEnglishWord } from "./db_controls";
 import { number } from "motion";
 import { MEnglishWord } from "@/types/db/englishWord";
@@ -97,6 +97,13 @@ export async function FetchQuestionEnglishWord(user_id: string, question_id: num
 
         if (question_id !== 0 && question_id <= current_question_max_id)
             current_question_max_id = question_id;
+
+        // /api/wordsのとき(クエリ指定がないとき)
+        if (question_id === 0){
+            let unanswerd_question_id = await GetUNAnswerdQuestionID(user_id);
+            console.log(`unanswerd_question_id:${unanswerd_question_id}`);
+            current_question_max_id = unanswerd_question_id;
+        }
 
         // t_question_max_idを基にレスポンスに必要な情報をDBから取得
         const maxQuestionInfo: searchCurrentQuestionEnglishWord = await GetCurrentQuestionEnglishWord(user_id, current_question_max_id)

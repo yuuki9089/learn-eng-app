@@ -8,6 +8,7 @@ import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEn
 import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionEnglishWord";
 import { FavoriteRequest } from "@/types/favoriteRequest";
 import { t_question_english_word } from "@/types/db/t_question_english_word";
+import { number } from "motion";
 
 /**
  * 英単語マスタを取得
@@ -35,7 +36,7 @@ export async function GetTQuestionEnglishWord(user_id: string): Promise<t_questi
   try {
     // [rows]でQueryResultだけを取得
     const [rows] = await pool.query(
-    `(SELECT
+      `(SELECT
       user_id,
       question_id,
       word_id,
@@ -107,6 +108,27 @@ export async function GetMaxQuestionID(user_id: string): Promise<number> {
 
     const a = rows as { max_question_id: number }[]
     return a[0].max_question_id;
+
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+export async function GetUNAnswerdQuestionID(user_id: string): Promise<number> {
+  try {
+    const [rows] = await pool.query(
+      `SELECT question_id FROM t_question_english_word tqew 
+      WHERE tqew.user_id = ? AND tqew.scoring_result = 0
+      ORDER BY question_id 
+      LIMIT 1`,
+      [
+        user_id
+      ]
+    );
+
+    const a = rows as { question_id: number }[]
+    return a[0].question_id;
 
   } catch (err) {
     console.error(err);
