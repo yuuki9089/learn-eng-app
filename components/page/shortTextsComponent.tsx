@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
 import CheckBox from '@mui/material/Checkbox';
 
-export default function ShortTextsComponent() {
+export type ShortTextsComponentProps = {
+    user_id: string;
+};
+export default function ShortTextsComponent({ user_id }: ShortTextsComponentProps) {
     return (
         <>
             {/* Main */}

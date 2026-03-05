@@ -9,6 +9,7 @@ import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionE
 import { FavoriteRequest } from "@/types/favoriteRequest";
 import { t_question_english_word } from "@/types/db/t_question_english_word";
 import { number } from "motion";
+import { t_question_sentence } from "@/types/db/t_question_sentence";
 
 /**
  * 英単語マスタを取得
@@ -84,6 +85,40 @@ export async function GetTQuestionEnglishWord(user_id: string): Promise<t_questi
       ]
     );
     return rows as t_question_english_word[];
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+export async function GetTQuestionSentence(user_id: string): Promise<t_question_sentence[]> {
+  try {
+    // [rows]でQueryResultだけを取得
+    const [rows] = await pool.query(
+      `(SELECT
+      *
+    FROM
+      t_question_sentence
+    WHERE
+      user_id = ? AND scoring_result <> 0
+    ORDER BY
+      question_id)
+    UNION 
+    (SELECT
+      *
+    FROM
+      t_question_sentence
+    WHERE
+      user_id = ? AND scoring_result = 0
+    ORDER BY
+      question_id
+      LIMIT 1)`,
+      [
+        user_id,
+        user_id
+      ]
+    );
+    return rows as t_question_sentence[];
   } catch (err) {
     console.error(err);
     throw err;

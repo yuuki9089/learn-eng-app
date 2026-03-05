@@ -1,5 +1,5 @@
 import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
-import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetTQuestionEnglishWord, GetUNAnswerdQuestionID, } from "./db_controls";
+import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetTQuestionEnglishWord, GetTQuestionSentence, GetUNAnswerdQuestionID, } from "./db_controls";
 import { InsertQuestionEnglishWord } from "./db_controls";
 import { number } from "motion";
 import { MEnglishWord } from "@/types/db/englishWord";
@@ -16,6 +16,7 @@ import { historyRequest } from "@/types/historyRequest";
 import { PageMode } from "@/types/pageMode";
 import { t_question_english_word } from "@/types/db/t_question_english_word";
 import { historyResponse } from "@/types/historyResponse";
+import { t_question_sentence } from "@/types/db/t_question_sentence";
 
 /**
  * 英単語の4択を作問する関数
@@ -100,7 +101,7 @@ export async function FetchQuestionEnglishWord(user_id: string, question_id: num
 
         // /api/wordsのとき(クエリ指定がないとき)
         // /api/words?<範囲外指定>のとき
-        if (question_id === 0 || current_question_max_id < question_id){
+        if (question_id === 0 || current_question_max_id < question_id) {
             let unanswerd_question_id = await GetUNAnswerdQuestionID(user_id);
             console.log(`unanswerd_question_id:${unanswerd_question_id}`);
             current_question_max_id = unanswerd_question_id;
@@ -248,6 +249,7 @@ export async function GetQuestionHistory(request: historyRequest): Promise<histo
                 favorite_flag: item.favorite_flag,
                 result: item.scoring_result,
             }));
+            break;
         // console.log(english_words_history);
 
         // t_question_phrase
@@ -256,9 +258,23 @@ export async function GetQuestionHistory(request: historyRequest): Promise<histo
         //     break;
 
         // t_question_sentence
-        // case PageMode.SHORT_TEXTS:
-        //     targetTable = "t_question_sentence";
-        //     break;
+        case PageMode.SHORT_TEXTS:
+            let short_texts_history: t_question_sentence[] = await GetTQuestionSentence(request.user_id);
+
+            response = short_texts_history.map((item) => ({
+                user_id: item.user_id,
+                question_id: item.question_id,
+                english_word: GetMEnglshWordInfo(english_all_words, item.word_id1).english_word,
+                question_date: item.question_date,
+                summarization: item.summarization,
+                favorite_flag: item.favorite_flag,
+                result: item.scoring_result,
+            }));
+            break;
     }
     return response;
+}
+
+function GGetTQuestionSentence(user_id: string): t_question_sentence[] | PromiseLike<t_question_sentence[]> {
+    throw new Error("Function not implemented.");
 }
