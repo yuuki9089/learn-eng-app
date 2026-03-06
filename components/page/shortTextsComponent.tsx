@@ -1,11 +1,12 @@
 "use client"
 
 import { PageMode } from "@/types/pageMode";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
 import CheckBox from '@mui/material/Checkbox';
+import { CardHeader } from "@mui/material";
 
 export type ShortTextsComponentProps = {
     user_id: string;
@@ -14,37 +15,65 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
     return (
         <>
             {/* Main */}
-            <main className="flex-1 flex gap-6 p-8">
+            <main className="flex-1 flex gap-6 p-8 h-screen">
                 {/* Center content */}
-                <Card className="flex-1">
+                <Card className="flex flex-col h-full">
+                    <CardTitle className="flex justify-between items-start px-5">
+                            <div>
+                                <h2 className="text-3xl font-bold">英短文</h2>
+                            </div>
+                            <div className="text-right text-xl text-muted-foreground">
+                                <div>No.100</div>
+                                <div>2025/11/3</div>
+                            </div>
+                    </CardTitle>
 
-                    <div className="flex justify-between items-start px-5">
-                        <div>
-                            <h2 className="text-3xl font-bold">英短文</h2>
-                        </div>
-                        <div className="text-right text-xl text-muted-foreground">
-                            <div>No.100</div>
-                            <div>2025/11/3</div>
-                        </div>
-                    </div>
-
-                    <div className="h-full flex flex-col justify-between">
-                        <CardContent className="p-8 space-y-6">
-                            <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
-                            <div className="w-full flex items-center gap-3 flex justify-between">
-
-                                <p className="text-2xl font-semibold">This is a pen.</p>
-                                <div className="mt-auto pt-6 flex gap-3 items-center">
+                    {/* <div className="flex flex-col justify-between h-full"> */}
+                        <CardContent className="space-y-6">
+                            <div className="flex items-center flex justify-between">
+                                <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
+                                <div className="mt-auto flex gap-3 items-center">
                                     <Volume2 size={22} className="cursor-pointer" />
                                     <CheckBox color='success' />
                                     {/* <Check className="text-green-500" /> */}
                                 </div>
                             </div>
+                        </CardContent>
+                        {/* <div className="flex flex-col h-full"> */}
+                        <CardContent className="flex-1 h-full overflow-auto p-8 space-y-6 min-h-0">
+                            <div className="w-full flex items-center gap-3 justify-between">
+                                <div className="flex-1 border rounded-lg p-4">
+                                    <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                                        Learning English requires consistent effort and daily practice.
+                                        Many learners struggle not because the language is too difficult,
+                                        but because they do not spend enough time using it in real situations.
+                                        One effective method is to read short passages every day and try
+                                        to translate them into your native language. This helps you build
+                                        vocabulary, understand grammar patterns, and improve comprehension.
 
+                                        Another useful habit is speaking out loud while studying.
+                                        When you read a sentence, try repeating it several times
+                                        until it feels natural. This allows your brain to connect
+                                        the written form of the language with its spoken sound.
+                                        Over time, you will notice that sentences become easier
+                                        to understand and produce.
+
+                                        It is also important to review what you have learned.
+                                        Even if you study many new words, you may forget them
+                                        quickly unless you revisit them regularly. Creating
+                                        small quizzes for yourself or using flashcards can help
+                                        strengthen your memory.
+
+                                        Finally, remember that mistakes are a natural part
+                                        of learning. Do not be afraid to make them. Each mistake
+                                        is an opportunity to improve your understanding and
+                                        become more confident in English.
+                                    </p>
+                                </div>
+                            </div>
                             <Input placeholder="ここに回答を入力" />
                             <Button className="mx-auto block">採点</Button>
-
-                            <div className='space-y-6 py-8'>
+                            <div className='space-y-6'>
                                 {/* AI Result */}
                                 <div className="border border-green-300 bg-green-50 rounded-xl p-4">
                                     <p className="font-semibold text-green-600">AI採点結果：80%</p>
@@ -58,14 +87,13 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
                                 </div>
                             </div>
                         </CardContent>
+                        <CardFooter className="mt-auto space-y-2 flex justify-between">
 
-                        <CardContent className="space-y-6">
-                            <div className="mt-auto flex justify-between pt-6">
-                                <Button variant="destructive">スキップ</Button>
-                                <Button>Next</Button>
-                            </div>
-                        </CardContent>
-                    </div>
+                            <Button variant="destructive">スキップ</Button>
+                            <Button>Next</Button>
+                        </CardFooter>
+                        {/* </div> */}
+                    {/* </div> */}
                 </Card >
             </main >
         </>
