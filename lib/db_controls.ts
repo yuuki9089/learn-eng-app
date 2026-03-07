@@ -10,6 +10,7 @@ import { FavoriteRequest } from "@/types/favoriteRequest";
 import { t_question_english_word } from "@/types/db/t_question_english_word";
 import { number } from "motion";
 import { t_question_sentence } from "@/types/db/t_question_sentence";
+import { QuestionShortTextsResponse } from "@/types/short-texts/questionsShortTexts.Response";
 
 /**
  * 英単語マスタを取得
@@ -150,6 +151,30 @@ export async function GetMaxQuestionID(user_id: string): Promise<number> {
   }
 }
 
+/**
+ * t_question_sentenceから最大のquestion_idを取得する関数
+ * @param params 
+ */
+export async function GetMaxQuestionIDSentence(user_id: string) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT MAX(tqs.question_id) AS max_question_id
+	     FROM t_question_sentence tqs 
+	     WHERE tqs.user_id = ?;
+      `,
+      [
+        user_id
+      ]
+    );
+    const a = rows as { max_question_id: number }[]
+    return a[0].max_question_id;
+  }
+  catch (ex) {
+    console.log(ex);
+    throw ex;
+  }
+}
+
 export async function GetUNAnswerdQuestionID(user_id: string): Promise<number> {
   try {
     const [rows] = await pool.query(
@@ -170,6 +195,29 @@ export async function GetUNAnswerdQuestionID(user_id: string): Promise<number> {
     throw err;
   }
 }
+
+
+export async function GetUNAnswerdQuestionIDSentence(user_id: string): Promise<number> {
+  try {
+    const [rows] = await pool.query(
+      `SELECT question_id FROM t_question_sentence tqs 
+       WHERE tqs.user_id = ? AND tqs.scoring_result = 0
+       ORDER BY question_id 
+       LIMIT 1`,
+      [
+        user_id
+      ]
+    );
+
+    const a = rows as { question_id: number }[]
+    return a[0].question_id;
+
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
 
 /**
  * 英単語出題テーブルに登録
@@ -321,6 +369,49 @@ export async function GetCurrentQuestionEnglishWord(user_id: string, question_id
     throw err;
   }
 }
+
+export async function GetSentenceFromQuesitonID(user_id: string, question_id: number): Promise<QuestionShortTextsResponse> {
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+        user_id,
+        question_id,
+        word_id1,
+        word_id2,
+        word_id3,
+        word_id4,
+        word_id5,
+        word_id6,
+        word_id7,
+        word_id8,
+        word_id9,
+        word_id10,
+        question_date,
+        audio_file_path,
+        scoring_result,
+        answer_accuracy_rate,
+        advice,
+        favorite_flag,
+        summarization,
+        example_answer
+        FROM t_question_sentence tqs 
+        WHERE tqs.user_id = ? AND tqs.question_id = ?`
+      ,
+      [
+        user_id,
+        question_id,
+      ]
+    );
+    const a = rows as QuestionShortTextsResponse[];
+    return a[0];
+
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+
 
 export async function PostFavoriteFlag(request: FavoriteRequest) {
   try {

@@ -8,17 +8,63 @@ import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volum
 import CheckBox from '@mui/material/Checkbox';
 import { CardHeader } from "@mui/material";
 import { Textarea } from "@/components/ui/textarea";
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { QuestionShortTextsResponse } from "@/types/short-texts/questionsShortTexts.Response";
 
 export type ShortTextsComponentProps = {
     user_id: string;
 };
 export default function ShortTextsComponent({ user_id }: ShortTextsComponentProps) {
-    // shadcnuiのtextareaがうまく行かないので↓から拝借
-    // https://zenn.dev/mitate_gengaku/articles/react-dynamic-height-textarea
+
     const [contentHeight, setContentHeight] = useState<number>(70)
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+    // /api/short-texts ← id=0
+    // /api/short-texts?id=・・ ← id=・・
+    const router = useRouter()
+    const searchParams = useSearchParams();
+    const question_id: number = Number(searchParams.get("id") ?? "0");
+    const [questions, setQuestions] = useState<QuestionShortTextsResponse>({
+        user_id: "",
+        question_id: 0,
+        word_id1: 0,
+        word_id2: 0,
+        word_id3: 0,
+        word_id4: 0,
+        word_id5: 0,
+        word_id6: 0,
+        word_id7: 0,
+        word_id8: 0,
+        word_id9: 0,
+        word_id10: 0,
+        question_date: "",
+        audio_file_path: "",
+        scoring_result: 0,
+        answer_accuracy_rate: 0,
+        advice: "",
+        favorite_flag: 0,
+        summarization: "",
+        example_answer: ""
+    })
+    const [checked, setChecked] = useState(false);
+
+    // 画面リロード時に動く関数
+    useEffect(() => {
+        if (user_id === '') return;
+        initializeCallAPI();
+    }, [user_id]);
+
+
+    const initializeCallAPI = async () => {
+        const response = await fetch("/api/fetch/short-texts?id=" + question_id)
+        const data = await response.json() as QuestionShortTextsResponse
+        setQuestions(data);
+        setChecked(data.favorite_flag === 1);
+    }
+
+    // shadcnuiのtextareaがうまく行かないので↓から拝借
+    // https://zenn.dev/mitate_gengaku/articles/react-dynamic-height-textarea
     const onChangeContent = (e: ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value
         if (textareaRef.current) {

@@ -33,7 +33,7 @@ export default async function Settings() {
                         <div className="w-full p-8">
                             <Card className="w-full shadow-xl border-[#9f9f9f] border-[2px]">
                                 <CardTitle className="pl-5 text-3xl">
-                                    フレーズ
+                                    英文フレーズ
                                 </CardTitle>
                                 <CardContent className="text-xl text-[#6d7583]">
                                     登録した単語から1文を出題
@@ -48,7 +48,7 @@ export default async function Settings() {
                         <div className="w-full p-8 ">
                             <Card className="w-full shadow-xl border-[#9f9f9f] border-[2px]">
                                 <CardTitle className="pl-5 text-3xl">
-                                    センテンス
+                                    英短文
                                 </CardTitle>
                                 <CardContent className="text-xl text-[#6d7583]">
                                     200語程度の短文の読解問題

@@ -1,5 +1,5 @@
 import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
-import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetTQuestionEnglishWord, GetTQuestionSentence, GetUNAnswerdQuestionID, } from "./db_controls";
+import { GetCurrentQuestionEnglishWord, GetEnglishWord, GetMaxQuestionID, GetMaxQuestionIDSentence, GetSentenceFromQuesitonID, GetTQuestionEnglishWord, GetTQuestionSentence, GetUNAnswerdQuestionID, GetUNAnswerdQuestionIDSentence, } from "./db_controls";
 import { InsertQuestionEnglishWord } from "./db_controls";
 import { number } from "motion";
 import { MEnglishWord } from "@/types/db/englishWord";
@@ -17,6 +17,7 @@ import { PageMode } from "@/types/pageMode";
 import { t_question_english_word } from "@/types/db/t_question_english_word";
 import { historyResponse } from "@/types/historyResponse";
 import { t_question_sentence } from "@/types/db/t_question_sentence";
+import { QuestionShortTextsResponse } from "@/types/short-texts/questionsShortTexts.Response";
 
 /**
  * 英単語の4択を作問する関数
@@ -145,6 +146,82 @@ export async function FetchQuestionEnglishWord(user_id: string, question_id: num
 
     // 1つ目のみ返却
     return cewq[0];
+}
+
+
+export async function FetchQuestionShortTexts(user_id: string, question_id: number): Promise<QuestionShortTextsResponse> {
+
+    // max_question_idを取得
+    const tqs_max_question_id:number = await GetMaxQuestionIDSentence(user_id);
+    console.log(`user_id:${user_id}`);
+    console.log(`tqs_max_question_id:${tqs_max_question_id}`);
+    // if: max_question_idがnullのとき(初回起動)
+    if (tqs_max_question_id === null) {
+        // 新規問題を3問作成
+        // DBに登録
+    }
+    // else: max_quetsion_idが!nullのとき(過去に問題を解いたことがあるとき)
+    else {
+        // if: クエリパラメータが範囲外または0のとき
+        if (question_id === 0 || tqs_max_question_id < question_id) {
+            // まだ解いていない問題(scoring_resultが0)をquestion_id順で1つ取得
+            const un_answered_question_id = await GetUNAnswerdQuestionIDSentence(user_id);
+            question_id = un_answered_question_id;
+        }
+
+        // else: クエリパラメータに指定があるとき
+        // 指定されたquestion_idの内容を取得
+
+        const question_info =await GetSentenceFromQuesitonID(user_id,question_id)
+        const response:QuestionShortTextsResponse={
+            user_id: question_info.user_id,
+            question_id: question_info.question_id,
+            word_id1: question_info.word_id1,
+            word_id2: question_info.word_id2,
+            word_id3: question_info.word_id3,
+            word_id4: question_info.word_id4,
+            word_id5: question_info.word_id5,
+            word_id6: question_info.word_id6,
+            word_id7: question_info.word_id7,
+            word_id8: question_info.word_id8,
+            word_id9: question_info.word_id9,
+            word_id10: question_info.word_id10,
+            question_date: ProcessQuestionDate(new Date(question_info.question_date)),
+            audio_file_path: question_info.audio_file_path,
+            scoring_result: question_info.scoring_result,
+            answer_accuracy_rate: question_info.answer_accuracy_rate,
+            advice: question_info.advice,
+            favorite_flag: question_info.favorite_flag,
+            summarization: question_info.summarization,
+            example_answer: question_info.example_answer
+        }
+        return response;
+    }
+
+
+    const tmp: QuestionShortTextsResponse = {
+        user_id: "",
+        question_id: 0,
+        word_id1: 0,
+        word_id2: 0,
+        word_id3: 0,
+        word_id4: 0,
+        word_id5: 0,
+        word_id6: 0,
+        word_id7: 0,
+        word_id8: 0,
+        word_id9: 0,
+        word_id10: 0,
+        question_date: "",
+        audio_file_path: "",
+        scoring_result: 0,
+        answer_accuracy_rate: 0,
+        advice: "",
+        favorite_flag: 0,
+        summarization: "",
+        example_answer: ""
+    }
+    return tmp;
 }
 
 
@@ -278,3 +355,5 @@ export async function GetQuestionHistory(request: historyRequest): Promise<histo
 function GGetTQuestionSentence(user_id: string): t_question_sentence[] | PromiseLike<t_question_sentence[]> {
     throw new Error("Function not implemented.");
 }
+
+
