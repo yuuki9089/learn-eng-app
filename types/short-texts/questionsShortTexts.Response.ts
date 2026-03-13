@@ -18,5 +18,6 @@ export type QuestionShortTextsResponse = {
     advice:string;
     favorite_flag:number;
     summarization:string;
+    sentence:string;
     example_answer:string;
 }

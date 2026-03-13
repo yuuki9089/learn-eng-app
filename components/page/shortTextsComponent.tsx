@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { QuestionShortTextsResponse } from "@/types/short-texts/questionsShortTexts.Response";
+import { FavoriteRequest } from "@/types/favoriteRequest";
 
 export type ShortTextsComponentProps = {
     user_id: string;
@@ -19,6 +20,9 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
 
     const [contentHeight, setContentHeight] = useState<number>(70)
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [isVisible, setIsVisible] = useState<boolean>(false);
+    const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     // /api/short-texts ← id=0
     // /api/short-texts?id=・・ ← id=・・
@@ -45,6 +49,7 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
         advice: "",
         favorite_flag: 0,
         summarization: "",
+        sentence: "",
         example_answer: ""
     })
     const [checked, setChecked] = useState(false);
@@ -76,6 +81,31 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
         }
     }
 
+    // checkboxのhandle関数
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setChecked(event.target.checked);
+        favoriteFlagCallAPI(event.target.checked ? 1 : 0);
+    };
+
+
+    // DBに回答結果を登録
+    const favoriteFlagCallAPI = async (favorite_flag: number) => {
+        const request: FavoriteRequest = {
+            user_id: user_id,
+            question_id: questions.question_id,
+            favorite_flag: favorite_flag,
+            page_mode: PageMode.SHORT_TEXTS
+        }
+
+        await fetch("/api/favorite_flag", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+        })
+    }
+
     return (
         <>
             {/* Main */}
@@ -87,8 +117,8 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
                             <h2 className="text-3xl font-bold">英短文</h2>
                         </div>
                         <div className="text-right text-xl text-muted-foreground">
-                            <div>No.100</div>
-                            <div>2025/11/3</div>
+                            <div>No.{questions.question_id}</div>
+                            <div>{questions.question_date}</div>
                         </div>
                     </CardTitle>
 
@@ -98,7 +128,11 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
                             <p className="text-xl text-muted-foreground">次のお題を翻訳してください。</p>
                             <div className="mt-auto flex gap-3 items-center">
                                 <Volume2 size={22} className="cursor-pointer" />
-                                <CheckBox color='success' />
+                                <CheckBox
+                                    color='success'
+                                    checked={checked}
+                                    onChange={handleChange}
+                                />
                                 {/* <Check className="text-green-500" /> */}
                             </div>
                         </div>
@@ -108,30 +142,7 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
                         <div className="w-full flex items-center gap-3 justify-between">
                             <div className="flex-1 border rounded-lg p-4">
                                 <p className="text-lg leading-relaxed whitespace-pre-wrap">
-                                    Learning English requires consistent effort and daily practice.
-                                    Many learners struggle not because the language is too difficult,
-                                    but because they do not spend enough time using it in real situations.
-                                    One effective method is to read short passages every day and try
-                                    to translate them into your native language. This helps you build
-                                    vocabulary, understand grammar patterns, and improve comprehension.
-
-                                    Another useful habit is speaking out loud while studying.
-                                    When you read a sentence, try repeating it several times
-                                    until it feels natural. This allows your brain to connect
-                                    the written form of the language with its spoken sound.
-                                    Over time, you will notice that sentences become easier
-                                    to understand and produce.
-
-                                    It is also important to review what you have learned.
-                                    Even if you study many new words, you may forget them
-                                    quickly unless you revisit them regularly. Creating
-                                    small quizzes for yourself or using flashcards can help
-                                    strengthen your memory.
-
-                                    Finally, remember that mistakes are a natural part
-                                    of learning. Do not be afraid to make them. Each mistake
-                                    is an opportunity to improve your understanding and
-                                    become more confident in English.
+                                    {questions.sentence}
                                 </p>
                             </div>
                         </div>

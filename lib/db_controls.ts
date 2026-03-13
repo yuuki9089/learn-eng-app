@@ -273,6 +273,73 @@ export async function InsertQuestionEnglishWord(request: QuestionEnglishWordResp
   }
 }
 
+export async function DBInsertQuestionSentence(qstr: QuestionShortTextsResponse) {
+  try {
+    const [result]: any = await pool.execute(
+      `INSERT INTO t_question_sentence (
+        user_id,
+        question_id,
+        word_id1,
+        word_id2,
+        word_id3,
+        word_id4,
+        word_id5,
+        word_id6,
+        word_id7,
+        word_id8,
+        word_id9,
+        word_id10,
+        question_date,
+        audio_file_path,
+        scoring_result,
+        answer_accuracy_rate,
+        advice,
+        favorite_flag,
+        summarization,
+        sentence,
+        example_answer
+      )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?)`,
+      [
+        qstr.user_id,
+        qstr.question_id,
+        qstr.word_id1,
+        qstr.word_id2,
+        qstr.word_id3,
+        qstr.word_id4,
+        qstr.word_id5,
+        qstr.word_id6,
+        qstr.word_id7,
+        qstr.word_id8,
+        qstr.word_id9,
+        qstr.word_id10,
+        qstr.question_date,
+        qstr.audio_file_path,
+        qstr.scoring_result,
+        qstr.answer_accuracy_rate,
+        qstr.advice,
+        qstr.favorite_flag,
+        qstr.summarization,
+        qstr.sentence,
+        qstr.example_answer
+      ]
+    );
+
+    console.log("DB_inserted");
+    return NextResponse.json({
+      success: true,
+    });
+
+  }
+  catch (error) {
+    console.error("INSERT ERROR:", error);
+    return NextResponse.json(
+      { error: "DB Insert Failed" },
+      { status: 500 }
+    );
+  }
+}
+
 /**
  * 例文をDBに登録(更新)
  * @param request 
@@ -392,6 +459,7 @@ export async function GetSentenceFromQuesitonID(user_id: string, question_id: nu
         answer_accuracy_rate,
         advice,
         favorite_flag,
+        sentence,
         summarization,
         example_answer
         FROM t_question_sentence tqs 
