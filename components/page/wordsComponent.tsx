@@ -18,7 +18,7 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
+import { RegisterAnsResultRequest } from "@/types/RegisterAnsResultRequest";
 import { FavoriteRequest } from "@/types/favoriteRequest";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -73,7 +73,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     // 新規問題を作成するAPIを叩く関数
     const nextProblemCallAPI = async () => {
         console.log(`確認用：${questions.question_id + 1}`)
-        // リダイレクトしていない？
+
         router.push(`/words?id=${questions.question_id + 1}`)
 
         // 
@@ -141,7 +141,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     // DBに回答結果を登録
     const registerAnsResultEnglishWord = async (questions: QuestionEnglishWordResponse, scoringResult: number) => {
 
-        const request: RegisterAnsResultEnglishWordRequest = {
+        const request: RegisterAnsResultRequest = {
             user_id: user_id,
             question_id: questions.question_id,
             scoring_result: scoringResult

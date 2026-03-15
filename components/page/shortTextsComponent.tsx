@@ -12,13 +12,14 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { QuestionShortTextsResponse } from "@/types/short-texts/questionsShortTexts.Response";
 import { FavoriteRequest } from "@/types/favoriteRequest";
+import { RegisterAnsResultRequest } from "@/types/RegisterAnsResultRequest";
 
 export type ShortTextsComponentProps = {
     user_id: string;
 };
 export default function ShortTextsComponent({ user_id }: ShortTextsComponentProps) {
 
-    const [contentHeight, setContentHeight] = useState<number>(70)
+    const [contentHeight, setContentHeight] = useState<number>(40)
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isCorrectAns, setIsCorrectAns] = useState<boolean>(false);
@@ -50,9 +51,11 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
         favorite_flag: 0,
         summarization: "",
         sentence: "",
-        example_answer: ""
+        example_answer: "",
+        user_ans: ""
     })
     const [checked, setChecked] = useState(false);
+    const [userAns, setUserAns] = useState("");
 
     // 画面リロード時に動く関数
     useEffect(() => {
@@ -66,6 +69,70 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
         const data = await response.json() as QuestionShortTextsResponse
         setQuestions(data);
         setChecked(data.favorite_flag === 1);
+        setUserAns(data.user_ans ?? "");
+
+        // 過去問題の回答を見る場合
+        if (data.scoring_result !== 0) {
+            setIsSubmitting(false);
+            setIsVisible(true);
+        }
+    }
+
+    // 新規問題を作成するAPIを叩く関数
+    const nextProblemCallAPI = async () => {
+        console.log(`確認用：${questions.question_id + 1}`)
+
+        router.push(`/short-texts?id=${questions.question_id + 1}`)
+
+        // 
+        const res = await fetch(`/api/fetch/short-texts?id=${questions.question_id + 1}`)
+        const data = await res.json() as QuestionShortTextsResponse
+        setQuestions(data);
+
+        // 新規問題をバックグラウンド実行
+        const response = await fetch(`/api/questions/words?id=${questions.question_id + 1}`)
+        // const data = await response.json() as QuestionEnglishWordResponse
+        // setQuestions(data);
+    }
+
+    // Nextボタン押下時の関数
+    const nextHandleClick = () => {
+        setIsVisible(false);
+        setIsSubmitting(false);
+        nextProblemCallAPI();
+    }
+
+    // スキップボタン押下時の関数
+    const skipHandleClick = () => {
+        const scoringResult = 3; // スキップ
+        registerAnsResultShortTexts(questions, scoringResult)
+        nextProblemCallAPI(); // 次の問題へ
+    }
+
+    const scoringHandleClick = () => {
+        if (userAns.trim() === "") {
+            alert("値を入力してください");
+            return;
+        }
+        setIsVisible(true);
+        setIsSubmitting(true);
+    }
+
+    const registerAnsResultShortTexts = async (questions: QuestionShortTextsResponse, scoringResult: number) => {
+
+        const request: RegisterAnsResultRequest = {
+            user_id: user_id,
+            question_id: questions.question_id,
+            scoring_result: scoringResult
+        }
+
+        await fetch("/api/question_ans/short-texts", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+        })
     }
 
     // shadcnuiのtextareaがうまく行かないので↓から拝借
@@ -79,6 +146,8 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
         if (!value.length) {
             setContentHeight(40)
         }
+        // ここでステートにテキストボックスの値を即時代入
+        setUserAns(e.target.value);
     }
 
     // checkboxのhandle関数
@@ -156,28 +225,48 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
                             style={{
                                 height: contentHeight
                             }}
-
+                            value={userAns ?? ''}
                         />
 
-                        <Button className="mx-auto block">採点</Button>
-                        <div className='space-y-6'>
-                            {/* AI Result */}
-                            <div className="border border-green-300 bg-green-50 rounded-xl p-4">
-                                <p className="font-semibold text-green-600">AI採点結果：80%</p>
-                                <p className="text-sm mt-1">ここにアドバイスが入る</p>
-                            </div>
+                        <Button
+                            className="mx-auto block"
+                            onClick={() => scoringHandleClick()}
+                            disabled={isSubmitting || questions.scoring_result !== 0 || userAns.length === 0}
+                        >
+                            採点
+                        </Button>
+                        {isVisible && (
+                            <div className='space-y-6'>
+                                {/* AI Result */}
+                                <div className="border border-green-300 bg-green-50 rounded-xl p-4">
+                                    <p className="font-semibold text-green-600">AI採点結果：80%</p>
+                                    <p className="text-sm mt-1">ここにアドバイスが入る</p>
+                                </div>
 
-                            {/* Model Answer */}
-                            < div className="border border-blue-300 bg-blue-50 rounded-xl p-4">
-                                <p className="font-semibold text-blue-600">模範解答</p>
-                                <p className="text-sm mt-1">ここに模範解答が入る</p>
+                                {/* Model Answer */}
+                                < div className="border border-blue-300 bg-blue-50 rounded-xl p-4">
+                                    <p className="font-semibold text-blue-600">模範解答</p>
+                                    <p className="text-sm mt-1">ここに模範解答が入る</p>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </CardContent>
                     <CardFooter className="mt-auto space-y-2 flex justify-between">
 
-                        <Button variant="destructive">スキップ</Button>
-                        <Button>Next</Button>
+                        {/* <div className="mt-auto flex justify-between"> */}
+                        {/* <a href={`/words?id=${questions.question_id + 1}`}> */}
+                        <Button variant="destructive"
+                            onClick={() => skipHandleClick()}
+                            disabled={isSubmitting || questions.scoring_result !== 0}
+                        >スキップ</Button>
+                        {/* </a> */}
+
+                        {/* <a href={`/words?id=${questions.question_id + 1}`}> */}
+                        <Button
+                            onClick={() => nextHandleClick()}
+                            disabled={!isSubmitting}
+                        >Next</Button>
+                        {/* </div> */}
                     </CardFooter>
                     {/* </div> */}
                     {/* </div> */}

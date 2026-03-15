@@ -208,8 +208,8 @@ export async function FetchQuestionShortTexts(user_id: string, question_id: numb
             favorite_flag: question_info.favorite_flag,
             summarization: question_info.summarization,
             sentence: question_info.sentence,
-            example_answer: question_info.example_answer
-
+            example_answer: question_info.example_answer,
+            user_ans:question_info.user_ans
         }
         return response;
     }
@@ -456,7 +456,8 @@ export async function GetQuestionSentence(user_id: string): Promise<QuestionShor
         favorite_flag: 0,
         summarization: question_english_sentence.summarization,
         sentence:question_english_sentence.sentence,
-        example_answer: question_english_sentence.example_answer
+        example_answer: question_english_sentence.example_answer,
+        user_ans: ""
     }
     
     return response;

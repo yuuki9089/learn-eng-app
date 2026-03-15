@@ -20,4 +20,5 @@ export type QuestionShortTextsResponse = {
     summarization:string;
     sentence:string;
     example_answer:string;
+    user_ans:string;
 }

@@ -4,7 +4,7 @@ import { MEnglishWord } from "@/types/db/englishWord";
 import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
 import { type } from "os";
 import { EXSentenceResponse } from "@/types/englishWord/exSentenceResponse";
-import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
+import {RegisterAnsResultRequest } from "@/types/RegisterAnsResultRequest";
 import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionEnglishWord";
 import { FavoriteRequest } from "@/types/favoriteRequest";
 import { t_question_english_word } from "@/types/db/t_question_english_word";
@@ -377,12 +377,38 @@ export async function DBInsertQuestionSentence(qstr: QuestionShortTextsResponse)
  * @param request 
  * @returns 
  */
-export async function RegesterAnsResultEnglishWord(request: RegisterAnsResultEnglishWordRequest) {
+export async function RegesterAnsResultEnglishWord(request: RegisterAnsResultRequest) {
   try {
     const [result]: any = await pool.execute(
       `UPDATE t_question_english_word tqew
       SET tqew.scoring_result = ?
       WHERE tqew.user_id = ? AND tqew.question_id = ?`,
+      [
+        request.scoring_result,
+        request.user_id,
+        request.question_id
+      ]
+    );
+    console.log("DB_inserted registerAns");
+    return NextResponse.json({
+      success: true,
+    });
+  }
+  catch (error) {
+    console.error("INSERT ERROR:", error);
+    return NextResponse.json(
+      { error: "DB Insert Failed" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function RegesterAnsResultShortTexts(request: RegisterAnsResultRequest) {
+  try {
+    const [result]: any = await pool.execute(
+      `UPDATE t_question_sentence tqs
+      SET tqs.scoring_result = ?
+      WHERE tqs.user_id = ? AND tqs.question_id = ?`,
       [
         request.scoring_result,
         request.user_id,
@@ -461,7 +487,8 @@ export async function GetSentenceFromQuesitonID(user_id: string, question_id: nu
         favorite_flag,
         sentence,
         summarization,
-        example_answer
+        example_answer,
+        user_ans 
         FROM t_question_sentence tqs 
         WHERE tqs.user_id = ? AND tqs.question_id = ?`
       ,
