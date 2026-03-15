@@ -167,9 +167,6 @@ export async function FetchQuestionShortTexts(user_id: string, question_id: numb
             // 問題作成
             CurrentQuestionSetntence = await GetQuestionSentence(user_id);
 
-            // // DBに登録
-            await DBInsertQuestionSentence(CurrentQuestionSetntence);
-
             // 配列にpush
             QuestionSentenceArr.push(CurrentQuestionSetntence);
         }
@@ -461,6 +458,9 @@ export async function GetQuestionSentence(user_id: string): Promise<QuestionShor
         example_answer: question_english_sentence.example_answer,
         user_ans: ""
     }
+
+    // // DBに登録
+    await DBInsertQuestionSentence(response);
 
     return response;
 }
