@@ -76,7 +76,7 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
 
         router.push(`/words?id=${questions.question_id + 1}`)
 
-        // 
+        // ↑router.pushではuseEffectが発火しないのでfetchで取得
         const res = await fetch(`/api/fetch/words?id=${questions.question_id + 1}`)
         const data = await res.json() as QuestionEnglishWordResponse
         setQuestions(data);

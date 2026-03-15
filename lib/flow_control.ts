@@ -163,6 +163,7 @@ export async function FetchQuestionShortTexts(user_id: string, question_id: numb
         let CurrentQuestionSetntence: QuestionShortTextsResponse;
         // 新規問題を3問作成
         for (let i = 0; i < 3; i++) {
+            console.log(`通った${i}回目`);
             // 問題作成
             CurrentQuestionSetntence = await GetQuestionSentence(user_id);
 
@@ -209,7 +210,7 @@ export async function FetchQuestionShortTexts(user_id: string, question_id: numb
             summarization: question_info.summarization,
             sentence: question_info.sentence,
             example_answer: question_info.example_answer,
-            user_ans:question_info.user_ans
+            user_ans: question_info.user_ans
         }
         return response;
     }
@@ -422,6 +423,7 @@ export async function GetQuestionHistory(request: historyRequest): Promise<histo
 export async function GetQuestionSentence(user_id: string): Promise<QuestionShortTextsResponse> {
     // question_idの最大値を取得
     const max_question_id = await GetMaxQuestionIDSentence(user_id);
+    console.log(`【max_question_id】${max_question_id}`)
 
     // 出題日を作成
     const process_question_date = ProcessQuestionDate(new Date())
@@ -455,10 +457,10 @@ export async function GetQuestionSentence(user_id: string): Promise<QuestionShor
         advice: "",
         favorite_flag: 0,
         summarization: question_english_sentence.summarization,
-        sentence:question_english_sentence.sentence,
+        sentence: question_english_sentence.sentence,
         example_answer: question_english_sentence.example_answer,
         user_ans: ""
     }
-    
+
     return response;
 }

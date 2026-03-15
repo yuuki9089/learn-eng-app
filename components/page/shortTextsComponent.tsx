@@ -58,8 +58,13 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
     const [userAns, setUserAns] = useState("");
 
     // 画面リロード時に動く関数
+    const initialized = useRef(false);
+
     useEffect(() => {
         if (user_id === '') return;
+        if (initialized.current) return;
+
+        initialized.current = true;
         initializeCallAPI();
     }, [user_id]);
 
@@ -80,17 +85,17 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
 
     // 新規問題を作成するAPIを叩く関数
     const nextProblemCallAPI = async () => {
-        console.log(`確認用：${questions.question_id + 1}`)
+        // console.log(`確認用：${questions.question_id + 1}`)
 
         router.push(`/short-texts?id=${questions.question_id + 1}`)
 
-        // 
+        // ↑router.pushではuseEffectが発火しないのでfetchで取得
         const res = await fetch(`/api/fetch/short-texts?id=${questions.question_id + 1}`)
         const data = await res.json() as QuestionShortTextsResponse
         setQuestions(data);
 
         // 新規問題をバックグラウンド実行
-        const response = await fetch(`/api/questions/words?id=${questions.question_id + 1}`)
+        const response = await fetch(`/api/questions/short-texts?id=${questions.question_id + 1}`)
         // const data = await response.json() as QuestionEnglishWordResponse
         // setQuestions(data);
     }

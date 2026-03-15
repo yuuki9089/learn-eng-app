@@ -259,7 +259,7 @@ export async function InsertQuestionEnglishWord(request: QuestionEnglishWordResp
         request.ex_sentence_ja
       ]
     );
-    console.log("DB_inserted");
+    console.log("DB_inserted:InsertQuestionEnglishWord");
     return NextResponse.json({
       success: true,
     });
@@ -267,7 +267,7 @@ export async function InsertQuestionEnglishWord(request: QuestionEnglishWordResp
   catch (error) {
     console.error("INSERT ERROR:", error);
     return NextResponse.json(
-      { error: "DB Insert Failed" },
+      { error: "DB Insert Failed:InsertQuestionEnglishWord" },
       { status: 500 }
     );
   }
@@ -325,7 +325,7 @@ export async function DBInsertQuestionSentence(qstr: QuestionShortTextsResponse)
       ]
     );
 
-    console.log("DB_inserted");
+    console.log("DB_inserted:DBInsertQuestionSentence");
     return NextResponse.json({
       success: true,
     });
@@ -334,7 +334,7 @@ export async function DBInsertQuestionSentence(qstr: QuestionShortTextsResponse)
   catch (error) {
     console.error("INSERT ERROR:", error);
     return NextResponse.json(
-      { error: "DB Insert Failed" },
+      { error: "DB Insert Failed:DBInsertQuestionSentence" },
       { status: 500 }
     );
   }
@@ -389,7 +389,7 @@ export async function RegesterAnsResultEnglishWord(request: RegisterAnsResultReq
         request.question_id
       ]
     );
-    console.log("DB_inserted registerAns");
+    console.log("DB_inserted:RegesterAnsResultEnglishWord");
     return NextResponse.json({
       success: true,
     });
@@ -397,7 +397,7 @@ export async function RegesterAnsResultEnglishWord(request: RegisterAnsResultReq
   catch (error) {
     console.error("INSERT ERROR:", error);
     return NextResponse.json(
-      { error: "DB Insert Failed" },
+      { error: "DB Insert Failed:RegesterAnsResultEnglishWord" },
       { status: 500 }
     );
   }
@@ -415,7 +415,7 @@ export async function RegesterAnsResultShortTexts(request: RegisterAnsResultRequ
         request.question_id
       ]
     );
-    console.log("DB_inserted registerAns");
+    console.log("DB_inserted:RegesterAnsResultShortTexts");
     return NextResponse.json({
       success: true,
     });
@@ -423,7 +423,7 @@ export async function RegesterAnsResultShortTexts(request: RegisterAnsResultRequ
   catch (error) {
     console.error("INSERT ERROR:", error);
     return NextResponse.json(
-      { error: "DB Insert Failed" },
+      { error: "DB Insert Failed:RegesterAnsResultShortTexts" },
       { status: 500 }
     );
   }
