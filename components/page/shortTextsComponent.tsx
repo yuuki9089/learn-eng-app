@@ -13,6 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { QuestionShortTextsResponse } from "@/types/short-texts/questionsShortTexts.Response";
 import { FavoriteRequest } from "@/types/favoriteRequest";
 import { RegisterAnsResultRequest } from "@/types/RegisterAnsResultRequest";
+import { ScoringEnglishSentenceResponse } from "@/types/short-texts/scoringEnglishSentenceResponse";
 
 export type ShortTextsComponentProps = {
     user_id: string;
@@ -114,11 +115,17 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
         nextProblemCallAPI(); // 次の問題へ
     }
 
+    // 採点結果押下時
     const scoringHandleClick = () => {
         if (userAns.trim() === "") {
             alert("値を入力してください");
             return;
         }
+
+        const scoringResult: number = 0;
+
+        // 採点・採点結果の登録
+        registerAnsResultShortTexts(questions, scoringResult)
         setIsVisible(true);
         setIsSubmitting(true);
     }
@@ -128,16 +135,45 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
         const request: RegisterAnsResultRequest = {
             user_id: user_id,
             question_id: questions.question_id,
-            scoring_result: scoringResult
+            scoring_result: scoringResult,
+            user_ans: userAns
         }
 
-        await fetch("/api/question_ans/short-texts", {
+        const response = await fetch("/api/question_ans/short-texts", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(request),
         })
+
+        const data = await response.json() as ScoringEnglishSentenceResponse
+
+        const newQuestions:QuestionShortTextsResponse = {
+            user_id: data.user_id,
+            question_id: data.question_id,
+            word_id1: questions.word_id1,
+            word_id2: questions.word_id2,
+            word_id3: questions.word_id3,
+            word_id4: questions.word_id4,
+            word_id5: questions.word_id5,
+            word_id6: questions.word_id6,
+            word_id7: questions.word_id7,
+            word_id8: questions.word_id8,
+            word_id9: questions.word_id9,
+            word_id10: questions.word_id10,
+            question_date: questions.question_date,
+            audio_file_path: questions.audio_file_path,
+            scoring_result: questions.scoring_result,
+            answer_accuracy_rate: data.correct_ans_rate,
+            advice: data.advice,
+            favorite_flag: questions.favorite_flag,
+            summarization: questions.summarization,
+            sentence: questions.sentence,
+            example_answer: data.example_answer,
+            user_ans: data.user_ans
+        }
+        setQuestions(newQuestions);
     }
 
     // shadcnuiのtextareaがうまく行かないので↓から拝借
@@ -240,21 +276,26 @@ export default function ShortTextsComponent({ user_id }: ShortTextsComponentProp
                         >
                             採点
                         </Button>
-                        {isVisible && (
-                            <div className='space-y-6'>
-                                {/* AI Result */}
-                                <div className="border border-green-300 bg-green-50 rounded-xl p-4">
-                                    <p className="font-semibold text-green-600">AI採点結果：80%</p>
-                                    <p className="text-sm mt-1">ここにアドバイスが入る</p>
-                                </div>
 
-                                {/* Model Answer */}
+                        <div className='space-y-6'>
+                            {isVisible && questions.scoring_result !== 3 && (
+                                <>
+                                    {/* AI Result */}
+                                    <div className="border border-green-300 bg-green-50 rounded-xl p-4">
+                                        <p className="font-semibold text-green-600">AI採点結果：{questions.answer_accuracy_rate}%</p>
+                                        <p className="text-sm mt-1">{questions.advice}</p>
+                                    </div>
+                                </>
+                            )}
+                            {/* Model Answer */}
+                            {isVisible && (
                                 < div className="border border-blue-300 bg-blue-50 rounded-xl p-4">
                                     <p className="font-semibold text-blue-600">模範解答</p>
-                                    <p className="text-sm mt-1">ここに模範解答が入る</p>
+                                    <p className="text-sm mt-1">{questions.example_answer}</p>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
+
                     </CardContent>
                     <CardFooter className="mt-auto space-y-2 flex justify-between">
 

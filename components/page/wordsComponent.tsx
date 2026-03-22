@@ -144,7 +144,8 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
         const request: RegisterAnsResultRequest = {
             user_id: user_id,
             question_id: questions.question_id,
-            scoring_result: scoringResult
+            scoring_result: scoringResult,
+            user_ans: "",
         }
 
         await fetch("/api/question_ans/words", {

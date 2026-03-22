@@ -4,13 +4,18 @@ import { MEnglishWord } from "@/types/db/englishWord";
 import { QuestionEnglishWordResponse } from "@/types/englishWord/questionEnglishWordResponse";
 import { type } from "os";
 import { EXSentenceResponse } from "@/types/englishWord/exSentenceResponse";
-import {RegisterAnsResultRequest } from "@/types/RegisterAnsResultRequest";
+import { RegisterAnsResultRequest } from "@/types/RegisterAnsResultRequest";
 import { searchCurrentQuestionEnglishWord } from "@/types/searchCurrentQuestionEnglishWord";
 import { FavoriteRequest } from "@/types/favoriteRequest";
 import { t_question_english_word } from "@/types/db/t_question_english_word";
 import { number } from "motion";
 import { t_question_sentence } from "@/types/db/t_question_sentence";
 import { QuestionShortTextsResponse } from "@/types/short-texts/questionsShortTexts.Response";
+import { OllamaApiPayload } from "@/types/ai/ollama_api_payload";
+import { OllamaApiResponse } from "@/types/ai/ollama_api_response";
+import { generateInferenceWithOllama } from "./ollama_ai";
+import { ScoringQuestionSentence } from "@/types/ai/scoring_question_sentence";
+import { ScoringEnglishSentenceResponse } from "@/types/short-texts/scoringEnglishSentenceResponse";
 
 /**
  * 英単語マスタを取得
@@ -403,29 +408,57 @@ export async function RegesterAnsResultEnglishWord(request: RegisterAnsResultReq
   }
 }
 
-export async function RegesterAnsResultShortTexts(request: RegisterAnsResultRequest) {
+export async function RegesterAnsResultShortTexts(request: RegisterAnsResultRequest): Promise<ScoringEnglishSentenceResponse> {
   try {
+    // user_idとquestion_idを基に問題文を取得
+    const cuurentQuestionSentence: QuestionShortTextsResponse = await GetSentenceFromQuesitonID(request.user_id, request.question_id);
+    const currentSentence = cuurentQuestionSentence.sentence;
+
+    // 問題文と回答内容をセットでAIに採点をぶん投げる
+    const scoringResult: ScoringQuestionSentence = await ScoringSentence(currentSentence, request.user_ans);
+    console.log(`user_ans:${request.user_ans}`);
+    console.log(`correct_ans_rate:${scoringResult.correct_ans_rate}`);
+    console.log(`example_answer:${scoringResult.example_answer}`);
+    console.log(`advice:${scoringResult.advice}`);
+    // 戻ってきた採点結果を基にscoring_resultを1or2でセット
+    if (Number(scoringResult.correct_ans_rate) > 80) request.scoring_result = 1;
+    else request.scoring_result = 2;
+
+    // 回答結果を登録
     const [result]: any = await pool.execute(
       `UPDATE t_question_sentence tqs
-      SET tqs.scoring_result = ?
+      SET tqs.scoring_result = ?, tqs.user_ans = ?, tqs.answer_accuracy_rate = ?, tqs.example_answer = ?, tqs.advice = ? 
       WHERE tqs.user_id = ? AND tqs.question_id = ?`,
       [
         request.scoring_result,
+        request.user_ans,
+        scoringResult.correct_ans_rate,
+        scoringResult.example_answer,
+        scoringResult.advice,
         request.user_id,
         request.question_id
       ]
     );
     console.log("DB_inserted:RegesterAnsResultShortTexts");
-    return NextResponse.json({
-      success: true,
-    });
+
+    const response: ScoringEnglishSentenceResponse = {
+      user_id: request.user_id,
+      question_id: request.question_id,
+      scoring_result: request.scoring_result,
+      user_ans: request.user_ans,
+      correct_ans_rate: Number(scoringResult.correct_ans_rate),
+      example_answer: scoringResult.example_answer,
+      advice: scoringResult.advice
+    }
+
+    return response;
+    // return NextResponse.json({
+    //   success: true,
+    // });
   }
   catch (error) {
     console.error("INSERT ERROR:", error);
-    return NextResponse.json(
-      { error: "DB Insert Failed:RegesterAnsResultShortTexts" },
-      { status: 500 }
-    );
+    throw new Error("DB Insert Failed:RegesterAnsResultShortTexts");
   }
 }
 
@@ -506,8 +539,6 @@ export async function GetSentenceFromQuesitonID(user_id: string, question_id: nu
   }
 }
 
-
-
 export async function PostFavoriteFlag(request: FavoriteRequest) {
   try {
     let table_name: string = "";
@@ -538,4 +569,47 @@ export async function PostFavoriteFlag(request: FavoriteRequest) {
     console.error(err);
     throw err;
   }
+}
+
+export async function ScoringSentence(sentence: string, user_ans: string) {
+  // Ollamaに渡すためのmessagesを作成
+  const chat_messages: OllamaApiPayload[] = [];
+  chat_messages.push({
+    "role": "system",
+    "content": "あなたは優秀な英語教師です。以下の英文とユーザーの回答をもとに、厳密に採点してください。\n\n"
+      + "【英文】\n"
+      + "「" + sentence + "」\n\n"
+      + "【ユーザーの回答】\n"
+      + "「" + user_ans + "」\n\n"
+      + "上記をもとに、以下を評価・生成してください。\n"
+      + "1. 正答率（意味の正確さ・文法・自然さを総合評価）\n"
+      + "2. 回答に対する具体的なアドバイス\n"
+      + "3. 模範解答（自然で正確な日本語訳）\n\n"
+      + "ただし、出力は**JSONオブジェクトのみ**とし、以下の形式を厳守してください。\n\n"
+      + "{\n"
+      + "  \"correct_ans_rate\": 0,\n"
+      + "  \"advice\": \"\",\n"
+      + "  \"example_answer\": \"\"\n"
+      + "}\n\n"
+      + "【採点基準】\n"
+      + "- 100点：意味・文法ともに完全に正しい\n"
+      + "- 80〜99点：細かいミスはあるが意味は正確\n"
+      + "- 50〜79点：一部意味の取り違えや不自然な表現あり\n"
+      + "- 0〜49点：大きな誤訳、または意味が大きく異なる\n\n"
+      + "【重要な制約】\n"
+      + "- JSON以外のテキストは一切出力しないこと\n"
+      + "- correct_ans_rate は0〜100の整数にすること\n"
+      + "- advice / example_answer は必ず文字列にすること\n"
+      + "- 改行を含む場合は \\n を使用すること\n"
+      + "- JSONが不正になる文字（余計な\"や制御文字）を含めないこと\n"
+      + "- adviceはユーザーの誤りを具体的に指摘し、改善方法を示すこと"
+  });
+
+  // Ollamaに採点をPOST
+  const result: OllamaApiResponse = await generateInferenceWithOllama(chat_messages)
+
+  // 戻り値
+  const response: ScoringQuestionSentence = JSON.parse(result.message.content)
+
+  return response;
 }
