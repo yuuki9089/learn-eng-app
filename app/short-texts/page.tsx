@@ -7,15 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Check, Home, LogOut, Settings, BookOpen, FileText, MessageSquare, Volume2 } from "lucide-react";
 import CheckBox from '@mui/material/Checkbox';
 import ShortTextsComponent from "@/components/page/shortTextsComponent";
+import { auth } from "@/auth";
 
 export default async function ShortTexts() {
-
+  const session = await auth();
   return (
     <>
       <div className="flex bg-[#f9fafb]">
         <Sidebar />
-        <ShortTextsComponent />
-        <SubPanel />
+        <ShortTextsComponent user_id={session?.user?.email || ''} />
+        <SubPanel user_id={session?.user?.email || ''} page_mode={PageMode.SHORT_TEXTS} />
       </div>
     </>
   );

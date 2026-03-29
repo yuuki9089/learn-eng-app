@@ -18,9 +18,10 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import { RegisterAnsResultEnglishWordRequest } from "@/types/RegisterAnsResultEnglishWordRequest";
+import { RegisterAnsResultRequest } from "@/types/RegisterAnsResultRequest";
 import { FavoriteRequest } from "@/types/favoriteRequest";
 import { useRouter, useSearchParams } from "next/navigation";
+import LoadingScreen from "../loadingscreen";
 
 export type WordsComponentProps = {
     user_id: string;
@@ -73,10 +74,10 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     // 新規問題を作成するAPIを叩く関数
     const nextProblemCallAPI = async () => {
         console.log(`確認用：${questions.question_id + 1}`)
-        // リダイレクトしていない？
+
         router.push(`/words?id=${questions.question_id + 1}`)
 
-        // 
+        // ↑router.pushではuseEffectが発火しないのでfetchで取得
         const res = await fetch(`/api/fetch/words?id=${questions.question_id + 1}`)
         const data = await res.json() as QuestionEnglishWordResponse
         setQuestions(data);
@@ -141,10 +142,11 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     // DBに回答結果を登録
     const registerAnsResultEnglishWord = async (questions: QuestionEnglishWordResponse, scoringResult: number) => {
 
-        const request: RegisterAnsResultEnglishWordRequest = {
+        const request: RegisterAnsResultRequest = {
             user_id: user_id,
             question_id: questions.question_id,
-            scoring_result: scoringResult
+            scoring_result: scoringResult,
+            user_ans: "",
         }
 
         await fetch("/api/question_ans/words", {
@@ -196,7 +198,8 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     return (
         <>
             {/* Main */}
-            < main className="flex-1 flex gap-6 p-8" >
+            < main className="flex-1 flex gap-6 p-8 relative" >
+                <LoadingScreen loading={true} color="#36d7b7" size="20"/>
                 {/* Center content */}
                 < Card className="flex-1" >
 

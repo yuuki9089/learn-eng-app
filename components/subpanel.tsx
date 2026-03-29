@@ -11,7 +11,7 @@ import Autocomplete from "@mui/material/Autocomplete"; // プルダウンの自�
 import { historyResponse } from "@/types/historyResponse";
 import { conditionds } from "@/types/conditions";
 import { historyRequest } from "@/types/historyRequest";
-import { PageMode } from "@/types/pageMode";
+import { getPageModeURL, PageMode } from "@/types/pageMode";
 import React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -128,7 +128,9 @@ export default function SubPanel({ user_id, page_mode }: Props) {
                     {history?.map((h) =>
                         <React.Fragment key={h.question_id}>
                             <div>
-                                <a href={`/words?id=${h.question_id}`}>
+                                <a href={
+                                    getPageModeURL(page_mode,h.question_id)
+                                }>
                                     <HistoryItem
                                         no={h.question_id}
                                         text={h.english_word}

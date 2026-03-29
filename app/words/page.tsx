@@ -12,8 +12,8 @@ export default async function Words() {
       <div className="flex bg-[#f9fafb]">
         <Sidebar />
         {/* email or 空文字列 */}
-        <WordsComponent user_id={session?.user?.email || ''}/>
-        <SubPanel user_id={session?.user?.email || ''} page_mode={PageMode.WORDS}/>
+        <WordsComponent user_id={session?.user?.email || ''} />
+        <SubPanel user_id={session?.user?.email || ''} page_mode={PageMode.WORDS} />
       </div>
     </>
   );

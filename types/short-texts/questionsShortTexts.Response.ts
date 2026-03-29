@@ -1,0 +1,24 @@
+export type QuestionShortTextsResponse = {
+    user_id:string;
+    question_id:number;
+    word_id1:number;
+    word_id2:number;
+    word_id3:number;
+    word_id4:number;
+    word_id5:number;
+    word_id6:number;
+    word_id7:number;
+    word_id8:number;
+    word_id9:number;
+    word_id10:number;
+    question_date:string;
+    audio_file_path:string;
+    scoring_result:number;
+    answer_accuracy_rate:number;
+    advice:string;
+    favorite_flag:number;
+    summarization:string;
+    sentence:string;
+    example_answer:string;
+    user_ans:string;
+}
