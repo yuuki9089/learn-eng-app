@@ -21,6 +21,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { RegisterAnsResultRequest } from "@/types/RegisterAnsResultRequest";
 import { FavoriteRequest } from "@/types/favoriteRequest";
 import { useRouter, useSearchParams } from "next/navigation";
+import LoadingScreen from "../loadingscreen";
 
 export type WordsComponentProps = {
     user_id: string;
@@ -197,7 +198,8 @@ export default function WordsComponent({ user_id }: WordsComponentProps) {
     return (
         <>
             {/* Main */}
-            < main className="flex-1 flex gap-6 p-8" >
+            < main className="flex-1 flex gap-6 p-8 relative" >
+                <LoadingScreen loading={true} color="#36d7b7" size="20"/>
                 {/* Center content */}
                 < Card className="flex-1" >
 

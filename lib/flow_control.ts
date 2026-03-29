@@ -311,14 +311,14 @@ export async function GenEnglishSentence(target_english_word: string): Promise<G
     const chat_messages: OllamaApiPayload[] = [];
     chat_messages.push({
         "role": "system",
-        "content": "あなたは優秀な英語教師です。以下の単語を必ず使用して、約200語の英語長文を作成してください。\n"
+        "content": "あなたは優秀な英語教師です。以下の単語を必ず使用して、約100語の英語長文を作成してください。\n"
             + "「" + target_english_word + "」\n\n"
             + "その後、作成した英文について以下を生成してください。\n"
             + "1. 英文の一言要約\n"
             + "2. 英文の日本語訳（模範解答）\n\n"
             + "ただし、出力は**JSONオブジェクトのみ**とし、以下の形式を厳守してください。\n\n"
             + "{\n"
-            + "  \"sentence\": \"（target_english_word を含む約200語の英文）\",\n"
+            + "  \"sentence\": \"（target_english_word を含む約100語の英文）\",\n"
             + "  \"summarization\": \"（英文の内容を一言で要約した日本語）\",\n"
             + "  \"example_answer\": \"（英文全体の自然な日本語訳）\"\n"
             + "}\n\n"

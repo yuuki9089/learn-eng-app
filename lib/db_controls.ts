@@ -603,6 +603,7 @@ export async function ScoringSentence(sentence: string, user_ans: string) {
       + "- 改行を含む場合は \\n を使用すること\n"
       + "- JSONが不正になる文字（余計な\"や制御文字）を含めないこと\n"
       + "- adviceはユーザーの誤りを具体的に指摘し、改善方法を示すこと"
+      + "- adviceは日本語で示すこと"
   });
 
   // Ollamaに採点をPOST
